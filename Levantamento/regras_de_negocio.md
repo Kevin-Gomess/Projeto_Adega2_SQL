@@ -1,61 +1,61 @@
-Código	Regra de negócio
+## Regras de Negócio
 
-RN01	O sistema deve aceitar os pagamentos por Pix, dinheiro, cartão de crédito e cartão de débito.
+- **RN01 — Formas de pagamento:** Uma venda pode ser paga em dinheiro, Pix, cartão de débito ou cartão de crédito. Também pode ter uma parte do valor lançada como fiado, desde que sejam atendidas as regras de autorização e limite do cliente.
 
-RN02	Cada venda registrada deve possuir data, funcionário responsável e seus respectivos itens.
+- **RN02 — Registro da venda:** Toda venda deve possuir data e hora, funcionário responsável, caixa relacionado e pelo menos um item registrado.
 
-RN03	O valor total da venda deve corresponder à soma dos valores de seus itens, considerando os descontos aplicáveis.
+- **RN03 — Cálculo da venda:** O valor total da venda deve corresponder à soma dos subtotais dos itens, considerando os descontos aplicados.
 
-RN04	Uma venda pode possuir vários itens, e cada item deve identificar o produto, a quantidade e o preço praticado.
+- **RN04 — Itens da venda:** Cada item de uma venda deve identificar o produto, o tipo de comercialização, a quantidade e o preço unitário aplicado no momento da venda.
 
-RN05	Toda movimentação de estoque deve identificar o produto, o tipo de movimentação, a quantidade e a data.
+- **RN05 — Registro de movimentação:** Toda movimentação de estoque deve identificar o produto, o tipo de movimentação, a quantidade, a data e o funcionário responsável.
 
-RN06	A abertura de uma garrafa para venda em doses deve gerar a saída correspondente do estoque de garrafas fechadas.
+- **RN06 — Venda de doses:** Quando uma garrafa for aberta para venda de doses, a abertura deve ser registrada como saída de uma unidade fechada do estoque, conforme o controle adotado para o produto.
 
-RN07	Uma mesma venda pode possuir mais de uma forma de pagamento, desde que os valores registrados correspondam ao total devido.
+- **RN07 — Pagamento dividido:** Uma venda pode possuir mais de um registro de pagamento. A soma dos valores registrados nas diferentes formas de pagamento, incluindo a parcela destinada ao fiado, deve corresponder ao total da venda. O valor lançado como fiado deve gerar ou atualizar a conta correspondente do cliente.
 
-RN08	O fiado somente pode ser concedido a clientes identificados e autorizados pela organização.
+- **RN08 — Identificação do cliente:** Para realizar uma operação com fiado, o cliente deve estar cadastrado e identificado no sistema.
 
-RN09	Cada registro de fiado deve estar vinculado à venda que originou a dívida.
+- **RN09 — Relação do fiado com a venda:** Toda conta de fiado deve estar relacionada à venda que originou o valor pendente e ao cliente responsável pela dívida.
 
-RN10	O sistema deve manter o limite de fiado definido para cada cliente autorizado.
+- **RN10 — Limite de fiado:** Cada cliente deve possuir um limite de crédito definido no cadastro. O valor pendente não pode ultrapassar o limite autorizado.
 
-RN11	Antes de registrar um novo fiado, o sistema deve verificar a autorização do cliente e o limite disponível. A verificação explícita da autorização depende da inclusão de cliente.fl_fiado_autorizado no SQL.
+- **RN11 — Verificação antes do fiado:** Antes de registrar uma nova parcela no fiado, o sistema deve verificar se o cliente não está bloqueado e se possui limite disponível. O limite disponível corresponde ao limite cadastrado menos os valores ainda pendentes.
 
-RN12	O saldo devedor deve ser atualizado conforme os pagamentos realizados.
+- **RN12 — Atualização do saldo:** Todo pagamento de fiado deve ser considerado no cálculo do valor já pago e do saldo pendente da conta.
 
-RN13	Os pagamentos de fiado devem registrar data, valor e forma de recebimento.
+- **RN13 — Registro de pagamento de fiado:** Cada recebimento de fiado deve registrar a conta correspondente, o valor recebido, a forma de pagamento, a data e o caixa responsável.
 
-RN14	O sistema deve permitir identificar fiados em aberto e quitados, considerando os pagamentos registrados.
+- **RN14 — Situação do fiado:** Uma conta deve permanecer com situação ABERTO enquanto o valor pago for menor que o valor total devido. Quando o valor pago alcançar o valor total, a situação deve ser QUITADO.
 
-RN15	Perdas, quebras e vencimentos devem ser registrados como movimentações de saída, com seus respectivos motivos.
+- **RN15 — Registro de perdas:** Produtos perdidos, quebrados, vencidos ou retirados por outros motivos devem ter sua saída registrada com a quantidade, a data, o motivo e o funcionário responsável.
 
-RN16	Os ajustes de estoque devem registrar a quantidade ajustada, a data, o motivo e o funcionário responsável.
+- **RN16 — Ajuste de estoque:** Toda correção manual de estoque deve registrar a quantidade movimentada, a data, o motivo e o funcionário responsável.
 
-RN17	A quantidade disponível em estoque deve ser atualizada conforme as entradas e saídas registradas.
+- **RN17 — Atualização do estoque:** O saldo do estoque deve refletir as entradas e saídas registradas nas movimentações.
 
-RN18	A validade dos produtos que necessitam desse controle deve ser registrada por lote.
+- **RN18 — Controle por lote:** Produtos que exigem controle de validade devem possuir registro de lote e data de vencimento.
 
-RN19	Produtos vencidos não devem ser disponibilizados para venda e devem ter sua saída registrada.
+- **RN19 — Produtos vencidos:** Produtos com validade vencida não devem ser disponibilizados para venda e sua retirada deve ser registrada no estoque.
 
-RN20	Cada item de compra deve identificar o produto e a quantidade comprada.
+- **RN20 — Itens de compra:** Cada item de uma compra deve identificar o produto, a quantidade solicitada e o custo unitário.
 
-RN21	A conferência do recebimento deve permitir identificar produtos faltantes, incorretos ou avariados.
+- **RN21 — Conferência de recebimento:** No recebimento de uma compra, a quantidade recebida deve ser conferida com a quantidade solicitada. Faltas, produtos incorretos ou avarias devem ser registrados.
 
-RN22	A abertura de caixa deve registrar o funcionário responsável e o valor inicial.
+- **RN22 — Abertura de caixa:** Toda abertura de caixa deve registrar o funcionário responsável, a data e hora e o valor inicial disponível.
 
-RN23	O fechamento de caixa deve comparar o valor esperado com o valor contado e registrar possíveis diferenças.
+- **RN23 — Fechamento de caixa:** No fechamento, o valor contado deve ser comparado com o valor esperado. Diferenças devem ser registradas e justificadas.
 
-RN24	As movimentações financeiras devem estar associadas ao caixa correspondente, conforme o tipo de operação.
+- **RN24 — Relação dos movimentos com o caixa:** Vendas e recebimentos de fiado devem ser relacionados ao caixa em que ocorreram, para permitir a conferência dos valores.
 
-RN25	A escala deve identificar o funcionário, o dia, o horário e a função exercida.
+- **RN25 — Registro de escala:** Toda escala deve identificar o funcionário, o dia de trabalho, o horário de início, o horário de término e a função exercida.
 
-RN26	O sistema deve impedir a venda de bebidas alcoólicas para menores de 18 anos.
+- **RN26 — Venda de bebidas alcoólicas:** É proibido vender, fornecer ou entregar bebidas alcoólicas a crianças e adolescentes menores de 18 anos. A maioridade deve ser conferida antes da conclusão da venda.
 
-RN27	O sistema deve respeitar as restrições legais aplicáveis à comercialização de produtos de tabaco.
+- **RN27 — Comercialização de produtos de tabaco:** A comercialização de produtos fumígenos deve respeitar as restrições legais, incluindo a proibição de venda a menores de 18 anos, as advertências sanitárias obrigatórias e as regras de exposição dos produtos nos pontos de venda.
 
-RN28	A emissão e o registro de documentos fiscais devem respeitar as exigências legais aplicáveis à organização.
+- **RN28 — Documentos fiscais:** As operações de venda e compra devem ter seus documentos fiscais registrados e emitidos conforme as obrigações aplicáveis ao enquadramento tributário e à legislação estadual da organização.
 
-RN29	Os dados pessoais devem ser tratados conforme a LGPD, com acesso limitado e utilização adequada à finalidade do sistema.
+- **RN29 — Proteção de dados pessoais:** Os dados pessoais de clientes e funcionários devem ser utilizados somente para finalidades relacionadas às atividades da organização, com acesso restrito e tratamento adequado conforme a LGPD.
 
-RN30	Ações importantes realizadas no sistema devem poder ser registradas para fins de auditoria.
+- **RN30 — Auditoria:** As operações importantes do sistema, como acessos, inclusões, alterações, exclusões e consultas a dados pessoais, devem possuir registro de auditoria, identificando o funcionário, a data, o tipo de evento e o registro envolvido.
