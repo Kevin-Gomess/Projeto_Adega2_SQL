@@ -1,3 +1,61 @@
+USE adega;
+
+-- 1) INSERT: cadastrar um produto (o trigger cria o estoque automaticamente).
+-- INSERT INTO produto
+--   (id_categoria, nm_produto, vl_venda, fl_vende_dose, fl_ativo)
+-- VALUES
+--   (1, 'Produto de teste', 7.50, 0, 1);
+
+-- 2) INSERT: registrar entrada de mercadoria.
+-- Informe um produto, funcionario e lote que ja existam.
+-- INSERT INTO movimentacao_estoque
+--   (id_produto, id_funcionario, id_lote, tp_movimento, qt_movimentada, ds_motivo)
+-- VALUES
+--   (1, 1, 1, 'ENTRADA_COMPRA', 5, 'Entrada de teste');
+
+-- 3) INSERT: criar um lote. O trigger inicia o saldo em zero.
+-- A quantidade deve entrar depois por movimentacao_estoque.
+-- INSERT INTO lote (id_item_compra, nr_lote, dt_validade, qt_disponivel)
+-- VALUES (1, 'LOTE-TESTE-999', '2027-12-31', 0);
+
+-- 4) Exemplo completo de venda no fiado (execute o bloco inteiro).
+-- Os IDs 3 sao os proximos IDs livres depois da massa_de_dados.sql.
+-- A venda e seus itens sao cadastrados primeiro; a procedure conclui o fiado.
+-- INSERT INTO venda
+--   (id_venda, id_funcionario, id_caixa, dt_venda, vl_desconto,
+--    vl_total, st_venda, fl_maioridade_conferida)
+-- VALUES
+--   (3, 2, 1, NOW(), 0.00, 5.50, 'CONCLUIDA', 1);
+--
+-- INSERT INTO item_venda
+--   (id_item_venda, id_venda, id_produto, id_lote, tp_item, qt_item, vl_unitario)
+-- VALUES
+--   (3, 3, 1, 1, 'UNIDADE', 1, 5.50);
+--
+-- Exemplo: R$ 2,00 em PIX e R$ 3,50 no fiado.
+-- INSERT INTO pagamento (id_venda, tp_forma, vl_pago) VALUES (3, 'PIX', 2.00);
+-- CALL sp_registrar_venda_fiado(3, 2, '2026-12-15', 3.50);
+-- CALL sp_validar_pagamentos_venda(3);
+
+-- 5) SELECT simples: produtos e saldos atuais.
+SELECT p.id_produto, p.nm_produto, p.vl_venda,
+       e.qt_atual, e.qt_minima, e.ds_localizacao
+FROM produto p
+INNER JOIN estoque e ON e.id_produto = p.id_produto
+ORDER BY p.nm_produto;
+
+-- 6) SELECT com JOIN: itens de cada venda.
+SELECT v.id_venda, v.dt_venda, f.nm_funcionario,
+       p.nm_produto, iv.qt_item, iv.tp_item,
+       iv.vl_unitario, iv.vl_subtotal
+FROM venda v
+INNER JOIN funcionario f ON f.id_funcionario = v.id_funcionario
+INNER JOIN item_venda iv ON iv.id_venda = v.id_venda
+INNER JOIN produto p ON p.id_produto = iv.id_produto
+ORDER BY v.dt_venda DESC, v.id_venda;
+
+-- 7) UPDATE: alterar o limite de fiado de um cliente.
+-- UPDATE cliente
 -- SET vl_limite_fiado = 250.00
 -- WHERE id_cliente = 1;
 
@@ -61,3 +119,18 @@ INNER JOIN produto p ON p.id_produto = e.id_produto
 LEFT JOIN movimentacao_estoque m ON m.id_produto = e.id_produto
 GROUP BY e.id_produto, p.nm_produto, e.qt_atual
 HAVING e.qt_atual <> qt_calculada_historico;
+
+-- 15) Fechamento de caixa (informe o total contado fisicamente).
+-- CALL sp_fechar_caixa(1, 161.00);
+
+-- 16) Registro de consulta a dado pessoal pela aplicação (LGPD).
+-- CALL sp_registrar_evento_acesso(1, 'CONSULTA_DADO_PESSOAL', 'cliente', '1', JSON_OBJECT('motivo', 'atendimento'), '192.0.2.10');
+
+-- 17) Para autorizar um cliente conhecido, a aplicação deve definir o funcionário logado:
+-- SET @id_funcionario_logado = 1;
+-- CALL sp_autorizar_cliente_fiado(1, 300.00);
+
+-- Exemplo de abertura de garrafa para vender doses (produto 2, lote 2).
+-- SET @id_garrafa = NULL;
+-- CALL sp_abrir_garrafa(2, 2, @id_garrafa);
+-- Depois, cadastre item_venda com tp_item='DOSE' e id_garrafa_aberta=@id_garrafa.
