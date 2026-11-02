@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <brmodelo>
   <projeto nome="Sistema_Comercial">
-    <!-- Modelo lógico: 18 entidades de negócio + 1 tabela técnica de auditoria. -->
+    <!-- Modelo lógico alinhado ao script SQL MySQL 8.0, versão 1.2 de 31/10/2026.
+         Inclui 18 tabelas de negócio e a tabela técnica log_acesso. -->
     <entidades>
       <entidade nome="categoria" id="1">
         <atributos>
           <atributo nome="id_categoria" pk="true"/>
-          <atributo nome="nome"/>
+          <atributo nome="nm_categoria"/>
+          <atributo nome="fl_restrita_maiores"/>
         </atributos>
       </entidade>
 
@@ -14,8 +16,14 @@
         <atributos>
           <atributo nome="id_produto" pk="true"/>
           <atributo nome="id_categoria" fk="true"/>
-          <atributo nome="nome"/>
-          <atributo nome="preco_venda"/>
+          <atributo nome="cd_barras"/>
+          <atributo nome="nm_produto"/>
+          <atributo nome="vl_venda"/>
+          <atributo nome="fl_vende_dose"/>
+          <atributo nome="qt_ml_garrafa"/>
+          <atributo nome="qt_ml_dose"/>
+          <atributo nome="vl_dose"/>
+          <atributo nome="fl_ativo"/>
         </atributos>
       </entidade>
 
@@ -23,68 +31,90 @@
         <atributos>
           <atributo nome="id_estoque" pk="true"/>
           <atributo nome="id_produto" fk="true" unique="true"/>
-          <atributo nome="quantidade"/>
+          <atributo nome="qt_atual"/>
+          <atributo nome="qt_minima"/>
+          <atributo nome="ds_localizacao"/>
+          <atributo nome="dt_atualizacao"/>
         </atributos>
       </entidade>
 
-      <entidade nome="movimentacao_estoque" id="4">
-        <atributos>
-          <atributo nome="id_movimentacao" pk="true"/>
-          <atributo nome="id_produto" fk="true"/>
-          <atributo nome="id_funcionario" fk="true"/>
-          <atributo nome="id_lote" fk="true" nullable="true"/>
-          <atributo nome="tp_movimento"/>
-          <atributo nome="qt_movimentada"/>
-          <atributo nome="ds_motivo"/>
-          <atributo nome="dt_movimentacao"/>
-        </atributos>
-      </entidade>
-
-      <entidade nome="funcionario" id="5">
+      <entidade nome="funcionario" id="4">
         <atributos>
           <atributo nome="id_funcionario" pk="true"/>
-          <atributo nome="nome"/>
-          <atributo nome="cargo"/>
+          <atributo nome="nm_funcionario"/>
+          <atributo nome="nr_cpf"/>
+          <atributo nome="tp_cargo"/>
+          <atributo nome="ds_login"/>
+          <atributo nome="ds_senha_hash"/>
+          <atributo nome="dt_admissao"/>
+          <atributo nome="fl_ativo"/>
         </atributos>
       </entidade>
 
-      <entidade nome="lote" id="6">
-        <atributos>
-          <atributo nome="id_lote" pk="true"/>
-          <atributo nome="id_item_compra" fk="true"/>
-          <atributo nome="nr_lote"/>
-          <atributo nome="dt_validade"/>
-          <atributo nome="qt_disponivel"/>
-        </atributos>
-      </entidade>
-
-      <entidade nome="escala" id="7">
+      <entidade nome="escala" id="5">
         <atributos>
           <atributo nome="id_escala" pk="true"/>
           <atributo nome="id_funcionario" fk="true"/>
-          <atributo nome="dia_semana"/>
-          <atributo nome="horario_inicio"/>
-          <atributo nome="horario_fim"/>
+          <atributo nome="dt_turno"/>
+          <atributo nome="hr_inicio"/>
+          <atributo nome="hr_fim"/>
+          <atributo nome="ds_funcao"/>
         </atributos>
       </entidade>
 
-      <entidade nome="caixa" id="8">
+      <entidade nome="cliente" id="6">
+        <atributos>
+          <atributo nome="id_cliente" pk="true"/>
+          <atributo nome="nm_cliente"/>
+          <atributo nome="nr_cpf"/>
+          <atributo nome="dt_nascimento"/>
+          <atributo nome="nr_telefone"/>
+          <atributo nome="vl_limite_fiado"/>
+          <atributo nome="fl_bloqueado"/>
+          <atributo nome="dt_consentimento_lgpd"/>
+          <atributo nome="dt_cadastro"/>
+        </atributos>
+      </entidade>
+
+      <entidade nome="caixa" id="7">
         <atributos>
           <atributo nome="id_caixa" pk="true"/>
           <atributo nome="id_funcionario" fk="true"/>
           <atributo nome="dt_abertura"/>
           <atributo nome="dt_fechamento"/>
-          <atributo nome="status"/>
+          <atributo nome="vl_troco_inicial"/>
+          <atributo nome="vl_esperado"/>
+          <atributo nome="vl_contado"/>
+          <atributo nome="vl_diferenca" derivado="true"/>
+          <atributo nome="st_caixa"/>
+          <atributo nome="ds_observacao"/>
         </atributos>
       </entidade>
 
-      <entidade nome="venda" id="9">
+      <entidade nome="venda" id="8">
         <atributos>
           <atributo nome="id_venda" pk="true"/>
           <atributo nome="id_funcionario" fk="true"/>
           <atributo nome="id_caixa" fk="true"/>
           <atributo nome="dt_venda"/>
-          <atributo nome="valor_total"/>
+          <atributo nome="vl_desconto"/>
+          <atributo nome="vl_total"/>
+          <atributo nome="st_venda"/>
+          <atributo nome="nr_documento_fiscal"/>
+          <atributo nome="fl_maioridade_conferida"/>
+        </atributos>
+      </entidade>
+
+      <entidade nome="fiado" id="9">
+        <atributos>
+          <atributo nome="id_fiado" pk="true"/>
+          <atributo nome="id_venda" fk="true" unique="true"/>
+          <atributo nome="id_cliente" fk="true"/>
+          <atributo nome="dt_abertura"/>
+          <atributo nome="dt_vencimento"/>
+          <atributo nome="vl_total"/>
+          <atributo nome="vl_pago"/>
+          <atributo nome="st_fiado"/>
         </atributos>
       </entidade>
 
@@ -93,8 +123,10 @@
           <atributo nome="id_item_venda" pk="true"/>
           <atributo nome="id_venda" fk="true"/>
           <atributo nome="id_produto" fk="true"/>
-          <atributo nome="quantidade"/>
-          <atributo nome="preco_unitario"/>
+          <atributo nome="tp_item"/>
+          <atributo nome="qt_item"/>
+          <atributo nome="vl_unitario"/>
+          <atributo nome="vl_subtotal" derivado="true"/>
         </atributos>
       </entidade>
 
@@ -102,42 +134,13 @@
         <atributos>
           <atributo nome="id_pagamento" pk="true"/>
           <atributo nome="id_venda" fk="true"/>
-          <atributo nome="tipo_pagamento"/>
-          <atributo nome="valor"/>
-        </atributos>
-      </entidade>
-
-      <entidade nome="cliente" id="12">
-        <atributos>
-          <atributo nome="id_cliente" pk="true"/>
-          <atributo nome="nome"/>
-          <atributo nome="telefone"/>
-          <atributo nome="fl_bloqueado"/>
-          <atributo nome="fl_fiado_autorizado"/>
-        </atributos>
-      </entidade>
-
-      <entidade nome="fiado" id="13">
-        <atributos>
-          <atributo nome="id_fiado" pk="true"/>
-          <atributo nome="id_cliente" fk="true"/>
-          <atributo nome="id_venda" fk="true" unique="true"/>
-          <atributo nome="valor_total"/>
-          <atributo nome="status"/>
-        </atributos>
-      </entidade>
-
-      <entidade nome="pagamento_fiado" id="14">
-        <atributos>
-          <atributo nome="id_pagamento_fiado" pk="true"/>
-          <atributo nome="id_fiado" fk="true"/>
-          <atributo nome="id_caixa" fk="true"/>
-          <atributo nome="valor_pago"/>
+          <atributo nome="tp_forma"/>
+          <atributo nome="vl_pago"/>
           <atributo nome="dt_pagamento"/>
         </atributos>
       </entidade>
 
-      <entidade nome="item_fiado" id="15">
+      <entidade nome="item_fiado" id="12">
         <atributos>
           <atributo nome="id_item_fiado" pk="true"/>
           <atributo nome="id_item_venda" fk="true" unique="true"/>
@@ -145,25 +148,43 @@
         </atributos>
       </entidade>
 
-      <entidade nome="fornecedor" id="16">
+      <entidade nome="pagamento_fiado" id="13">
         <atributos>
-          <atributo nome="id_fornecedor" pk="true"/>
-          <atributo nome="nome"/>
-          <atributo nome="cnpj"/>
+          <atributo nome="id_pagamento_fiado" pk="true"/>
+          <atributo nome="id_fiado" fk="true"/>
+          <atributo nome="id_caixa" fk="true"/>
+          <atributo nome="tp_forma"/>
+          <atributo nome="vl_pago"/>
+          <atributo nome="dt_pagamento"/>
         </atributos>
       </entidade>
 
-      <entidade nome="compra" id="17">
+      <entidade nome="fornecedor" id="14">
+        <atributos>
+          <atributo nome="id_fornecedor" pk="true"/>
+          <atributo nome="nm_fornecedor"/>
+          <atributo nome="nr_cnpj"/>
+          <atributo nome="nr_telefone"/>
+          <atributo nome="tp_fornecimento"/>
+          <atributo nome="fl_ativo"/>
+        </atributos>
+      </entidade>
+
+      <entidade nome="compra" id="15">
         <atributos>
           <atributo nome="id_compra" pk="true"/>
           <atributo nome="id_fornecedor" fk="true"/>
           <atributo nome="id_funcionario" fk="true"/>
-          <atributo nome="dt_compra"/>
-          <atributo nome="valor_total"/>
+          <atributo nome="dt_pedido"/>
+          <atributo nome="dt_recebimento"/>
+          <atributo nome="tp_recebimento"/>
+          <atributo nome="nr_nota_fiscal"/>
+          <atributo nome="vl_total"/>
+          <atributo nome="st_compra"/>
         </atributos>
       </entidade>
 
-      <entidade nome="item_compra" id="18">
+      <entidade nome="item_compra" id="16">
         <atributos>
           <atributo nome="id_item_compra" pk="true"/>
           <atributo nome="id_compra" fk="true"/>
@@ -173,6 +194,29 @@
           <atributo nome="vl_custo"/>
           <atributo nome="fl_conferido"/>
           <atributo nome="ds_divergencia"/>
+        </atributos>
+      </entidade>
+
+      <entidade nome="lote" id="17">
+        <atributos>
+          <atributo nome="id_lote" pk="true"/>
+          <atributo nome="id_item_compra" fk="true"/>
+          <atributo nome="nr_lote"/>
+          <atributo nome="dt_validade"/>
+          <atributo nome="qt_disponivel"/>
+        </atributos>
+      </entidade>
+
+      <entidade nome="movimentacao_estoque" id="18">
+        <atributos>
+          <atributo nome="id_movimentacao" pk="true"/>
+          <atributo nome="id_produto" fk="true"/>
+          <atributo nome="id_funcionario" fk="true"/>
+          <atributo nome="id_lote" fk="true" nullable="true"/>
+          <atributo nome="tp_movimento"/>
+          <atributo nome="qt_movimentada"/>
+          <atributo nome="ds_motivo"/>
+          <atributo nome="dt_movimentacao"/>
         </atributos>
       </entidade>
 
@@ -190,7 +234,7 @@
       </entidade>
     </entidades>
 
-    <!-- Cardinalidades: card1 corresponde a entidade1; card2 corresponde a entidade2. -->
+    <!-- card1 = entidade1; card2 = entidade2. -->
     <relacionamentos>
       <relacionamento nome="R1_Categoria_Produto" card1="(0,N)" card2="(1,1)" entidade1="categoria" entidade2="produto"/>
       <relacionamento nome="R2_Produto_Estoque" card1="(1,1)" card2="(1,1)" entidade1="produto" entidade2="estoque"/>
@@ -217,4 +261,3 @@
     </relacionamentos>
   </projeto>
 </brmodelo>
-
