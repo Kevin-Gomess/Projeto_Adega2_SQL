@@ -1,4 +1,4 @@
-ntegrantes
+integrantes
 Nome completo do aluno	RGM	Usuário do GitHub
 Kevin Gomes	47796006	[PREENCHER]
 Brayan Antonio Daza Paredes	48892009	[PREENCHER]
