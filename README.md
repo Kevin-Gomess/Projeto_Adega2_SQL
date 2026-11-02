@@ -1,10 +1,17 @@
 Adega do Tonho — Projeto de Banco de Dados
+
 Integrantes
+
 Nome completo do aluno	RGM	Usuário do GitHub
+
 Kevin Gomes	47796006	[PREENCHER]
+
 Brayan Antonio Daza Paredes	50184857	[PREENCHER]
+
 Gabriel dos Santos Eufrasio	49005260	[PREENCHER]
+
 Gabriel Gonçalves Moura	48892009	[PREENCHER]
+
 Felipe Militão	49331108	[PREENCHER]
 
 
