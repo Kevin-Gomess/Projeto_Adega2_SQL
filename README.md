@@ -1,9 +1,15 @@
 integrantes
+
 Nome completo do aluno	RGM	Usuário do GitHub
+
 Kevin Gomes	47796006	[PREENCHER]
+
 Brayan Antonio Daza Paredes	48892009	[PREENCHER]
+
 Gabriel dos Santos Eufrasio	49005260	[PREENCHER]
+
 Gabriel Gonçalves Moura	[CONFERIR RGM]	[PREENCHER]
+
 Felipe Militão	[CONFERIR RGM]	[PREENCHER]
 
 
