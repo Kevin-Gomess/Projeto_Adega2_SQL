@@ -438,7 +438,7 @@ Cada problema e cada KPI com as tabelas que o sustentam e a consulta do script q
 
 - **SGBD:** MySQL 8.0.16 ou superior (os `CHECK` só são aplicados a partir dessa versão).
 - **Software em que o modelo lógico foi criado:** brModelo [PREENCHER VERSÃO].
-- **Arquivo editável:** [`diagramas/modelo_logico.brm`](diagramas/modelo_logico.brm) [ATUALIZAR no brModelo para as 21 tabelas, ver abaixo].
+- **Arquivo editável do brModelo:** `diagramas/modelo_logico.brm` [SALVAR depois de montar no brModelo; o roteiro com todas as tabelas, colunas, chaves e ligações está em [`diagramas/modelo_logico_brmodelo_passo_a_passo.md`](diagramas/modelo_logico_brmodelo_passo_a_passo.md)].
 - **Imagem do modelo lógico:** [`diagramas/modelo_logico.png`](diagramas/modelo_logico.png) (desenhada a partir do script SQL, com as 21 tabelas).
 - **Modelo lógico em texto:** [`docs/modelo_logico.md`](docs/modelo_logico.md); versão para o dbdiagram.io: [`diagramas/modelo_logico.dbml`](diagramas/modelo_logico.dbml).
 
@@ -554,7 +554,7 @@ As quantidades acima vêm da simulação; depois de rodar no MySQL, conferir com
 | :---- | :---- |
 | Relatório Técnico Final | [`README.md`](README.md) |
 | DER conceitual revisado | [`diagramas/der_conceitual`](diagramas/) [PREENCHER arquivo do brModelo]; apoio: [`.png`](diagramas/der_conceitual.png) e [`.md`](diagramas/der_conceitual.md) |
-| Modelo lógico (editável) | [`diagramas/modelo_logico.brm`](diagramas/modelo_logico.brm) |
+| Modelo lógico (editável, brModelo) | `diagramas/modelo_logico.brm` [SALVAR do brModelo]; roteiro: [`passo a passo`](diagramas/modelo_logico_brmodelo_passo_a_passo.md) |
 | Modelo lógico (imagem) | [`diagramas/modelo_logico.png`](diagramas/modelo_logico.png) |
 | Modelo lógico (texto) | [`docs/modelo_logico.md`](docs/modelo_logico.md) |
 | Normalização | [`docs/normalizacao.md`](docs/normalizacao.md) |
