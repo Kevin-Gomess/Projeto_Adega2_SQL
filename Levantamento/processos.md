@@ -34,7 +34,7 @@ O cliente deve ser identificado no cadastro para que a adega consiga acompanhar 
 
 **Dados envolvidos:** cliente, venda, itens vendidos, valor lançado no fiado, limite disponível, data de abertura e vencimento.
 
-**Entidades relacionadas:** CLIENTE, VENDA, ITEM_VENDA, FIADO e PAGAMENTO.
+**Entidades relacionadas:** CLIENTE, VENDA, ITEM_VENDA, FIADO, ITEM_FIADO e PAGAMENTO.
 
 ### PR04 — Recebimento e quitação do fiado
 
@@ -92,11 +92,11 @@ Toda entrada ou saída de produtos deve ser registrada para manter o histórico 
 
 Na venda de doses, o funcionário registra a quantidade de doses vendidas. A abertura da garrafa representa uma saída de uma unidade fechada do estoque, conforme o controle adotado para o produto. O sistema registra o tipo de movimentação, o produto, a quantidade, a data e o funcionário responsável.
 
-Quando a movimentação estiver relacionada a um lote, essa informação também é registrada.
+Quando a movimentação estiver relacionada a um lote, essa informação também é registrada. Ao abrir uma garrafa, o sistema registra a garrafa aberta com o volume em mililitros; cada dose vendida desconta desse volume, e a garrafa passa a esgotada quando o volume acaba.
 
 **Dados envolvidos:** produto, funcionário, lote, tipo de movimentação, quantidade, motivo e data.
 
-**Entidades relacionadas:** MOVIMENTACAO_ESTOQUE, PRODUTO, FUNCIONARIO e LOTE.
+**Entidades relacionadas:** MOVIMENTACAO_ESTOQUE, GARRAFA_ABERTA, PRODUTO, FUNCIONARIO e LOTE.
 
 ### PR09 — Registro de perdas, quebras e controle de validade
 
@@ -112,11 +112,11 @@ Nos produtos controlados por lote, o sistema permite consultar a data de validad
 
 No início do expediente, o funcionário responsável registra a abertura do caixa e o valor inicial disponível para troco.
 
-Durante o funcionamento, as vendas e os recebimentos de fiado são relacionados ao caixa correspondente. No encerramento, o funcionário informa o valor contado. O sistema compara o valor contado com o valor esperado e registra a diferença, quando existir, junto com uma observação ou justificativa.
+Durante o funcionamento, as vendas e os recebimentos de fiado são relacionados ao caixa correspondente, e os suprimentos, sangrias e despesas em dinheiro são registrados como movimentações do caixa. No encerramento, o funcionário informa o valor contado. O sistema compara o valor contado com o valor esperado e registra a diferença, quando existir, junto com uma observação ou justificativa.
 
 **Dados envolvidos:** funcionário, data e hora de abertura, valor inicial, vendas, recebimentos, data e hora de fechamento, valor esperado, valor contado e diferença.
 
-**Entidades relacionadas:** CAIXA, FUNCIONARIO, VENDA, PAGAMENTO e PAGAMENTO_FIADO.
+**Entidades relacionadas:** CAIXA, MOVIMENTACAO_CAIXA, FUNCIONARIO, VENDA, PAGAMENTO e PAGAMENTO_FIADO.
 
 ### PR11 — Cadastro de produtos e categorias
 
