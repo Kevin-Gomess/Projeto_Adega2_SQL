@@ -1,10 +1,5 @@
-
 # Processo de Normalização - Adega do Tonho
 
-**Projeto:** Sistema de gerenciamento da Adega do Tonho  
-**SGBD:** MySQL 8.0  
-**Versão de referência:** 1.4  
-**Data de referência:** 01/11/2026  
 
 ## 1. Apresentação
 
@@ -12,7 +7,7 @@ A normalização foi utilizada para organizar as informações do banco de dados
 
 O processo foi analisado considerando as três primeiras formas normais: Primeira Forma Normal (1FN), Segunda Forma Normal (2FN) e Terceira Forma Normal (3FN).
 
-A estrutura utilizada como referência é a versão 1.4 do arquivo `script_adequado_final.sql`, que possui 19 tabelas.
+A estrutura utilizada como referência é a versão 2.0 do arquivo `docs/script.sql`, que possui 21 tabelas.
 
 ## 2. Primeira Forma Normal (1FN)
 
@@ -35,6 +30,9 @@ O mesmo foi feito nas compras. A tabela `item_compra` permite registrar cada pro
 | pagamento | Valores e formas de pagamento da venda |
 | compra | Dados gerais da compra |
 | item_compra | Produtos que fazem parte da compra |
+| item_fiado | Linhas da venda que tiveram parte do valor lançada no fiado |
+| garrafa_aberta | Garrafas abertas para a venda de doses, uma linha por garrafa |
+| movimentacao_caixa | Suprimentos, sangrias e despesas do caixa, uma linha por movimento |
 
 Assim, as informações não precisam ser armazenadas como listas dentro de uma única coluna.
 
@@ -90,6 +88,14 @@ Os dados de identificação e comercialização ficam na tabela `produto`, enqua
 
 A ligação é feita por `id_produto`.
 
+### Fiado e item do fiado
+
+O produto, a quantidade e o preço de cada linha ficam apenas em `item_venda`. A tabela `item_fiado` guarda só a ligação com a linha (`id_item_venda`) e o valor daquela linha que foi para o fiado (`vl_fiado`). Assim, esses dados não são copiados e não podem divergir. Como o fiado nasce de uma única venda (`fiado.id_venda` é UNIQUE), o cliente e o prazo ficam em `fiado`, e não nas linhas.
+
+### Garrafa aberta e movimentação do caixa
+
+O volume restante de uma garrafa aberta depende da garrafa, por isso fica em `garrafa_aberta` (e não em `produto`, que guarda o volume de uma garrafa nova). Os suprimentos, sangrias e despesas dependem do caixa e ficam em `movimentacao_caixa`, em vez de colunas soltas na tabela `caixa`.
+
 ### Compra e lote
 
 Os dados da compra ficam em `compra`, os itens recebidos ficam em `item_compra` e as informações dos lotes ficam em `lote`.
@@ -116,7 +122,20 @@ Alguns exemplos de benefícios são:
 - Controlar os lotes e suas datas de validade separadamente dos dados gerais dos produtos.
 - Manter o histórico das movimentações de estoque.
 
-## 6. Considerações sobre os campos calculados
+## 6. Redundâncias que mantivemos de propósito
+
+Quatro valores poderiam ser calculados a partir de outras tabelas, mas ficam gravados por motivo de histórico ou de controle. A consistência deles é protegida por triggers, procedures e consultas de auditoria:
+
+| Coluna | Poderia ser calculada de | Por que fica gravada |
+|---|---|---|
+| `estoque.qt_atual` | soma das movimentações do produto | Saber o saldo sem somar todo o histórico. Só muda por `movimentacao_estoque` (trigger) e a consulta de auditoria A01 confere. |
+| `venda.vl_total` | soma dos itens menos o desconto | Guarda o valor cobrado no momento. A procedure de fiado e o fechamento de caixa conferem com itens e pagamentos (consulta A02). |
+| `fiado.vl_pago` e `st_fiado` | soma de `pagamento_fiado` | Mostrar o saldo rápido. O trigger atualiza os dois a cada recebimento e a consulta A09 confere. |
+| `lote.qt_disponivel` | soma das movimentações do lote | Escolher o lote na venda. Começa em zero e só muda por movimentação. |
+
+Por isso a 3FN é atendida na estrutura das tabelas, e essas colunas são redundâncias controladas, não erros de modelagem.
+
+## 7. Considerações sobre os campos calculados
 
 Algumas tabelas possuem campos calculados pelo próprio banco de dados:
 
@@ -125,7 +144,7 @@ Algumas tabelas possuem campos calculados pelo próprio banco de dados:
 
 Esses campos são gerados pelo banco de dados e não precisam ser informados manualmente nas operações comuns de inserção.
 
-## 7. Conclusão
+## 8. Conclusão
 
 A organização do banco de dados da Adega do Tonho foi feita buscando atender às três primeiras formas normais.
 
