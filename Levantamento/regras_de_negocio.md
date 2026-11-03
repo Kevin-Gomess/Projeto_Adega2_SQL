@@ -10,7 +10,7 @@
 
 - **RN05 — Registro de movimentação:** Toda movimentação de estoque deve identificar o produto, o tipo de movimentação, a quantidade, a data e o funcionário responsável.
 
-- **RN06 — Venda de doses:** Quando uma garrafa for aberta para venda de doses, a abertura deve ser registrada como saída de uma unidade fechada do estoque, conforme o controle adotado para o produto.
+- **RN06 — Venda de doses:** Quando uma garrafa for aberta para venda de doses, a abertura deve ser registrada como saída de uma unidade fechada do estoque, conforme o controle adotado para o produto. O volume restante da garrafa aberta é controlado em mililitros e cada dose vendida o reduz; não se vende dose acima do volume restante.
 
 - **RN07 — Pagamento dividido:** Uma venda pode possuir mais de um registro de pagamento. A soma dos valores registrados nas diferentes formas de pagamento, incluindo a parcela destinada ao fiado, deve corresponder ao total da venda. O valor lançado como fiado deve gerar ou atualizar a conta correspondente do cliente.
 
@@ -44,7 +44,7 @@
 
 - **RN22 — Abertura de caixa:** Toda abertura de caixa deve registrar o funcionário responsável, a data e hora e o valor inicial disponível.
 
-- **RN23 — Fechamento de caixa:** No fechamento, o valor contado deve ser comparado com o valor esperado. Diferenças devem ser registradas e justificadas.
+- **RN23 — Fechamento de caixa:** No fechamento, o valor contado deve ser comparado com o valor esperado. O valor esperado considera o troco inicial, as vendas e os recebimentos de fiado em dinheiro, os suprimentos e, como saída, as sangrias e despesas. Diferenças devem ser registradas e justificadas.
 
 - **RN24 — Relação dos movimentos com o caixa:** Vendas e recebimentos de fiado devem ser relacionados ao caixa em que ocorreram, para permitir a conferência dos valores.
 
