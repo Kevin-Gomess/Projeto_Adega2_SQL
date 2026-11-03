@@ -18,7 +18,7 @@ RF07	O sistema deve permitir registrar vendas com data, funcionário, caixa, pro
 
 RF08	O sistema deve permitir registrar uma ou mais formas de pagamento utilizadas em uma venda.
 
-RF09	O sistema deve permitir cadastrar clientes e registrar explicitamente quais estão autorizados a realizar compras por fiado. A autorização depende da inclusão do campo fl_fiado_autorizado no SQL.
+RF09	O sistema deve permitir cadastrar clientes e registrar quais estão autorizados a realizar compras por fiado. O cliente é cadastrado bloqueado para fiado e só é liberado pelo gerente, que também define o limite.
 
 RF10	O sistema deve permitir registrar fiados vinculados a uma venda, identificando o cliente e os itens que ficaram pendentes.
 
@@ -50,25 +50,28 @@ RF23	O sistema deve permitir registrar perdas, quebras e ajustes de estoque, ide
 
 RF24	O sistema deve permitir registrar a conferência dos itens recebidos em compras e suas possíveis divergências.
 
+RF25	O sistema deve permitir registrar suprimentos, sangrias e despesas em dinheiro no caixa aberto, para que o valor esperado do fechamento considere essas movimentações.
+
+RF26	O sistema deve permitir controlar o volume restante de cada garrafa aberta para venda de doses, impedindo a venda de doses acima do volume disponível.
+
 
 Requisitos não funcionais
 
 
 RNF01	Facilidade de uso: a interface deve ser simples e intuitiva para os funcionários.	Avaliação de uso com funcionário da adega.
 
-RNF02	Rapidez: as consultas de produtos, preços e estoque devem apresentar resultados rapidamente.	Até 2 segundos para consultas comuns.
+RNF02	Rapidez: as consultas de produtos, preços e estoque devem apresentar resultados rapidamente.	Meta proposta de até 2 segundos para consultas comuns.
 
 RNF03	Integridade: os dados de vendas, compras e estoque devem permanecer consistentes.	Verificação por consultas de auditoria.
 
-RNF04	Segurança: o acesso às funcionalidades deve respeitar as permissões de cada usuário.	Perfis de atendente e gerente.
+RNF04	Segurança: o acesso às funcionalidades deve respeitar as permissões de cada usuário.	Perfis de atendente e gerente, se implementados.
 
 RNF05	Disponibilidade: as informações devem estar disponíveis durante o horário de funcionamento.	Meta proposta de até 15 minutos de indisponibilidade por semana no horário de funcionamento.
 
-RNF06	Cópia de segurança: o sistema deve permitir cópias de segurança dos dados.	Pelo menos uma cópia por dia.
+RNF06	Cópia de segurança: o sistema deve permitir cópias de segurança dos dados.	Meta proposta de pelo menos uma cópia por dia.
 
 RNF07	Compatibilidade: o sistema deve permitir utilização em computadores e dispositivos móveis.	Testes em computador e celular.
 
 RNF08	Proteção de dados pessoais: os dados de clientes e funcionários devem ser tratados conforme a LGPD.	Acesso restrito e tratamento adequado dos dados.
 
 RNF09	Manutenibilidade: a estrutura deve facilitar futuras alterações e correções.	Organização das tabelas, relacionamentos e documentação.
-
