@@ -27,7 +27,7 @@ A Adega do Tonho é a mesma organização utilizada na Entrega 1, mantendo a con
 Contexto e porte
 - Tempo de funcionamento: aproximadamente 4 anos.
 - Pessoas envolvidas: cerca de 3 a 4 pessoas, conforme o dia.
-- Horário de funcionamento: de segunda a quinta-feira, das 13h às 23h; de sexta-feira a domingo, das 13h à meia-noite.
+- Horário de funcionamento: de segunda a quinta-feira, das 13h00 às 23h00; de sexta-feira a domingo, das 13h00 as 00h00.
 - Produtos comercializados: refrigerantes, cervejas, bebidas alcoólicas, doces, salgadinhos, sucos, itens de mercearia, produtos para narguilé, cigarros e isqueiros.
 - Também existem bebidas destinadas à venda em doses.
 - Estrutura física: a parte da frente é utilizada para atendimento e exposição dos produtos, enquanto os fundos são utilizados como estoque.
