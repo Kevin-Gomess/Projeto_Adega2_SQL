@@ -1,4 +1,3 @@
-
 # Modelo Lógico do Banco de Dados — Adega do Tonho
 
 ## 1. Apresentação
@@ -35,7 +34,11 @@ As tabelas principais do projeto são:
 - ITEM_COMPRA
 - LOTE
 - MOVIMENTACAO_ESTOQUE
+- GARRAFA_ABERTA
+- MOVIMENTACAO_CAIXA
 - LOG_ACESSO
+
+São 21 tabelas: as 18 entidades de negócio do DER conceitual, mais três tabelas de apoio criadas na implementação (GARRAFA_ABERTA, MOVIMENTACAO_CAIXA e LOG_ACESSO). Elas existem para controlar o volume das garrafas abertas para dose, os suprimentos, sangrias e despesas do caixa e a auditoria.
 
 ## 3. Estrutura das tabelas
 
@@ -59,13 +62,14 @@ Armazena as categorias utilizadas para organizar os produtos e indicar se possue
   - cd_barras — VARCHAR(14)
   - nm_produto — VARCHAR(100)
   - vl_venda — DECIMAL(10,2)
+  - fl_controla_validade — TINYINT(1)
   - fl_vende_dose — TINYINT(1)
   - qt_ml_garrafa — SMALLINT UNSIGNED
   - qt_ml_dose — SMALLINT UNSIGNED
   - vl_dose — DECIMAL(10,2)
   - fl_ativo — TINYINT(1)
 
-Armazena os produtos comercializados pela adega, incluindo preços e informações sobre a venda por dose.
+Armazena os produtos comercializados pela adega, incluindo preços, se o produto exige controle de validade por lote e as informações sobre a venda por dose.
 
 ### 3.3 ESTOQUE
 
@@ -124,7 +128,7 @@ Registra os turnos e as funções exercidas pelos funcionários.
   - dt_consentimento_lgpd — DATETIME
   - dt_cadastro — DATETIME
 
-Armazena os dados dos clientes cadastrados, principalmente para o controle das compras realizadas no fiado.
+Armazena os dados dos clientes cadastrados, principalmente para o controle das compras realizadas no fiado. O cliente nasce bloqueado (fl_bloqueado = 1) e só pode comprar fiado depois que o gerente o autoriza e define o limite.
 
 ### 3.7 CAIXA
 
@@ -187,16 +191,20 @@ Registra as vendas realizadas no fiado, identificando o cliente, o vencimento e 
 - **FKs:**
   - id_venda → venda(id_venda)
   - id_produto → produto(id_produto)
+  - id_lote → lote(id_lote) (opcional)
+  - id_garrafa_aberta → garrafa_aberta(id_garrafa_aberta) (opcional)
 - **Atributos:**
   - id_item_venda — BIGINT UNSIGNED
   - id_venda — BIGINT UNSIGNED
   - id_produto — INT UNSIGNED
+  - id_lote — INT UNSIGNED (lote da unidade vendida)
+  - id_garrafa_aberta — BIGINT UNSIGNED (garrafa da dose vendida)
   - tp_item — ENUM
   - qt_item — SMALLINT UNSIGNED
   - vl_unitario — DECIMAL(10,2)
   - vl_subtotal — DECIMAL(12,2) (gerado)
 
-Representa os produtos incluídos em cada venda, com quantidade e preço praticado no momento da operação.
+Representa os produtos incluídos em cada venda, com quantidade e preço praticado no momento da operação. Na venda de unidade informa o lote de onde saiu; na venda por dose informa a garrafa aberta.
 
 ### 3.11 PAGAMENTO
 
@@ -218,9 +226,10 @@ Registra os pagamentos das vendas. Uma venda pode ter mais de uma forma de pagam
 - **Atributos:**
   - id_item_fiado — BIGINT UNSIGNED
   - id_item_venda — BIGINT UNSIGNED
+  - vl_fiado — DECIMAL(10,2)
   - dt_lancamento — DATETIME
 
-Identifica os itens da venda que foram destinados ao fiado.
+Identifica as linhas da venda que tiveram parte do valor destinada ao fiado e quanto de cada linha foi lançado (vl_fiado). Assim uma venda com pagamento dividido (parte à vista, parte no fiado) fica registrada sem copiar produto, quantidade ou preço.
 
 ### 3.13 PAGAMENTO_FIADO
 
@@ -337,9 +346,45 @@ Registra entradas, saídas, perdas, devoluções e ajustes no estoque.
 
 Registra eventos de acesso e alterações para apoiar a auditoria e o controle de acesso aos dados.
 
+### 3.20 GARRAFA_ABERTA
+
+- **PK:** id_garrafa_aberta
+- **FKs:**
+  - id_lote → lote(id_lote)
+  - id_produto → produto(id_produto)
+  - id_funcionario → funcionario(id_funcionario)
+- **Atributos:**
+  - id_garrafa_aberta — BIGINT UNSIGNED
+  - id_lote — INT UNSIGNED
+  - id_produto — INT UNSIGNED
+  - id_funcionario — INT UNSIGNED
+  - dt_abertura — DATETIME
+  - qt_ml_inicial — SMALLINT UNSIGNED
+  - qt_ml_restante — SMALLINT UNSIGNED
+  - st_garrafa — ENUM
+
+Controla o volume que ainda resta em cada garrafa aberta para venda de doses. A abertura baixa uma garrafa fechada do estoque (SAIDA_DOSE) e cada dose vendida desconta os mililitros da garrafa.
+
+### 3.21 MOVIMENTACAO_CAIXA
+
+- **PK:** id_movimentacao_caixa
+- **FKs:**
+  - id_caixa → caixa(id_caixa)
+  - id_funcionario → funcionario(id_funcionario)
+- **Atributos:**
+  - id_movimentacao_caixa — BIGINT UNSIGNED
+  - id_caixa — INT UNSIGNED
+  - id_funcionario — INT UNSIGNED
+  - tp_movimento — ENUM
+  - vl_movimento — DECIMAL(10,2)
+  - ds_motivo — VARCHAR(200)
+  - dt_movimentacao — DATETIME
+
+Registra suprimentos (entrada de dinheiro), sangrias e despesas (saídas) do caixa, para que o valor esperado no fechamento considere o dinheiro que entrou ou saiu fora das vendas.
+
 ## 4. Relacionamentos e cardinalidades
 
-As cardinalidades abaixo representam as relações implementadas pelas chaves estrangeiras no script SQL:
+As cardinalidades abaixo representam as 30 relações implementadas pelas chaves estrangeiras no script SQL:
 
 | Relacionamento | Cardinalidade |
 |---|---|
@@ -365,6 +410,13 @@ As cardinalidades abaixo representam as relações implementadas pelas chaves es
 | PRODUTO — MOVIMENTACAO_ESTOQUE | 1:N |
 | FUNCIONARIO — MOVIMENTACAO_ESTOQUE | 1:N |
 | LOTE — MOVIMENTACAO_ESTOQUE | 1:N |
+| LOTE — ITEM_VENDA | 1:N (opcional) |
+| GARRAFA_ABERTA — ITEM_VENDA | 1:N (opcional) |
+| LOTE — GARRAFA_ABERTA | 1:N |
+| PRODUTO — GARRAFA_ABERTA | 1:N |
+| FUNCIONARIO — GARRAFA_ABERTA | 1:N |
+| CAIXA — MOVIMENTACAO_CAIXA | 1:N |
+| FUNCIONARIO — MOVIMENTACAO_CAIXA | 1:N |
 | FUNCIONARIO — LOG_ACESSO | 1:N |
 
 Observação: a tabela LOG_ACESSO permite que um evento seja registrado sem funcionário associado, pois sua FK aceita valor nulo. A tabela ESTOQUE possui uma restrição UNIQUE em id_produto, garantindo no máximo um registro de estoque por produto.
@@ -377,9 +429,32 @@ As chaves estrangeiras foram utilizadas para manter a ligação entre os dados e
 
 Também foram aplicadas restrições UNIQUE em campos que não podem se repetir, como CPF, CNPJ, login e código de barras, conforme definido no script SQL.
 
-## 6. Considerações finais
+## 6. Regras garantidas no próprio banco
+
+Além das chaves e restrições, o script cria triggers e procedures que impedem dados incoerentes. As principais:
+
+| Regra | Onde está |
+|---|---|
+| Todo produto cadastrado ganha um registro de estoque zerado | trigger `trg_produto_cria_estoque` |
+| O saldo do lote começa em zero e só muda por movimentação | triggers `trg_lote_inicia_zero` e `trg_movimentacao_atualiza_estoque` |
+| Venda e recebimento de fiado exigem caixa aberto | `trg_venda_caixa_aberto`, `trg_pagamento_fiado_valida` |
+| Item vendido: produto ativo, maioridade conferida, lote do produto, lote não vencido e saldo suficiente | `trg_item_venda_valida` |
+| Venda de unidade gera a saída de estoque sozinha | `trg_item_venda_registra_saida` |
+| Movimentações, itens de venda, pagamentos e itens de fiado não podem ser alterados nem apagados | triggers `*_bloqueia_update` e `*_bloqueia_delete` |
+| Soma dos pagamentos não passa do total da venda | `trg_pagamento_valida` |
+| Situação do fiado (ABERTO ou QUITADO) é calculada pelo valor pago | `trg_fiado_status_insert` e `trg_fiado_status_update` |
+| Auditoria de cliente, fiado, recebimento e fechamento de caixa | triggers `trg_*_audita_*` e `trg_pagamento_fiado_atualiza` |
+| Autorizar cliente para fiado (só gerente) | procedure `sp_autorizar_cliente_fiado` |
+| Abrir garrafa para dose | procedure `sp_abrir_garrafa` |
+| Lançar parte de uma venda no fiado, com limite e bloqueio | procedure `sp_registrar_venda_fiado` |
+| Conferir pagamentos da venda | procedure `sp_validar_pagamentos_venda` |
+| Fechar o caixa e calcular o valor esperado | procedure `sp_fechar_caixa` |
+| Registrar login, falha de login e consulta a dado pessoal | procedure `sp_registrar_evento_acesso` |
+
+A aplicação deve definir `@id_funcionario_logado` depois que o usuário entra no sistema, porque os triggers de auditoria usam essa variável.
+
+## 7. Considerações finais
 
 O modelo lógico organiza as informações necessárias para os processos de venda, pagamento, fiado, compra, controle de estoque, validade dos produtos, funcionários e caixa.
 
 A estrutura foi implementada em MySQL 8.0 e utiliza chaves e restrições para manter a integridade dos dados.
-
