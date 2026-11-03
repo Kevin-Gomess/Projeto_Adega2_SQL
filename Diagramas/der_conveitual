@@ -1,1 +1,458 @@
+# DER da Adega (modelo conceitual)
 
+Versão 1.1, 29/10/2026. Este arquivo substitui o antigo `DER.adega.png`. A imagem `der_conceitual.png` é a versão em figura deste mesmo diagrama e deve ser gerada de novo sempre que o diagrama mudar.
+
+O diagrama abaixo é desenhado pelo próprio GitHub (Mermaid), então não depende de imagem externa. Para exportar em PNG ou PDF, cole o bloco em https://mermaid.live. O modelo lógico, com chaves estrangeiras, está em `modelo_logico.dbml` (abrir em https://dbdiagram.io/d) e em `../docs/script.sql`.
+
+## Como ler o diagrama
+
+- O DER usa a notação pé de galinha. Cada ponta do traço mostra **mínimo e máximo**: `||` exatamente um, `|o` zero ou um, `}o` zero ou muitos, `}|` um ou muitos.
+- O símbolo ao lado de uma entidade diz **quantas ocorrências dela** se ligam a uma ocorrência da outra. Ex.: `CATEGORIA ||--o{ PRODUTO` significa que cada produto tem exatamente 1 categoria e cada categoria tem 0 a N produtos.
+- **Não há chaves estrangeiras** no desenho: elas só aparecem no modelo lógico. Cada entidade marca seu identificador (`PK`) e os atributos únicos (`UK`).
+- `LOG_ACESSO` é tabela de apoio (auditoria) e fica fora do DER conceitual.
+
+## Diagrama
+
+```mermaid
+erDiagram
+    CATEGORIA ||--o{ PRODUTO : "classifica"
+    PRODUTO ||--|| ESTOQUE : "possui"
+    PRODUTO ||--o{ MOVIMENTACAO_ESTOQUE : "é movimentado em"
+    FUNCIONARIO ||--o{ MOVIMENTACAO_ESTOQUE : "registra"
+    LOTE |o--o{ MOVIMENTACAO_ESTOQUE : "é baixado em"
+    ITEM_COMPRA ||--o{ LOTE : "origina"
+    FUNCIONARIO ||--o{ ESCALA : "cumpre"
+    FUNCIONARIO ||--o{ CAIXA : "abre"
+    FUNCIONARIO ||--o{ VENDA : "realiza"
+    CAIXA ||--o{ VENDA : "agrupa"
+    VENDA ||--|{ ITEM_VENDA : "contém"
+    PRODUTO ||--o{ ITEM_VENDA : "é vendido em"
+    VENDA ||--|{ PAGAMENTO : "é paga por"
+    CLIENTE ||--o{ FIADO : "possui"
+    FIADO ||--o{ PAGAMENTO_FIADO : "recebe"
+    CAIXA ||--o{ PAGAMENTO_FIADO : "recebe"
+    VENDA ||--o| FIADO : "pode gerar"
+    ITEM_VENDA ||--o| ITEM_FIADO : "pode compor"
+    FORNECEDOR ||--o{ COMPRA : "fornece"
+    FUNCIONARIO ||--o{ COMPRA : "realiza"
+    COMPRA ||--|{ ITEM_COMPRA : "contém"
+    PRODUTO ||--o{ ITEM_COMPRA : "é comprado em"
+
+    CATEGORIA {
+        int id_categoria PK
+        string nm_categoria UK
+        bool fl_restrita_maiores
+    }
+    PRODUTO {
+        int id_produto PK
+        string cd_barras UK
+        string nm_produto
+        decimal vl_venda
+        bool fl_vende_dose
+        int qt_ml_garrafa
+        int qt_ml_dose
+        decimal vl_dose
+        bool fl_ativo
+    }
+    ESTOQUE {
+        int id_estoque PK
+        int qt_atual
+        int qt_minima
+        string ds_localizacao
+        datetime dt_atualizacao
+    }
+    FUNCIONARIO {
+        int id_funcionario PK
+        string nm_funcionario
+        string nr_cpf UK
+        enum tp_cargo
+        string ds_login UK
+        string ds_senha_hash
+        date dt_admissao
+        bool fl_ativo
+    }
+    ESCALA {
+        int id_escala PK
+        date dt_turno
+        time hr_inicio
+        time hr_fim
+        string ds_funcao
+    }
+    CLIENTE {
+        int id_cliente PK
+        string nm_cliente
+        string nr_cpf UK
+        date dt_nascimento
+        string nr_telefone
+        decimal vl_limite_fiado
+        bool fl_bloqueado
+        datetime dt_consentimento_lgpd
+        datetime dt_cadastro
+    }
+    CAIXA {
+        int id_caixa PK
+        datetime dt_abertura
+        datetime dt_fechamento
+        decimal vl_troco_inicial
+        decimal vl_esperado
+        decimal vl_contado
+        decimal vl_diferenca
+        enum st_caixa
+        string ds_observacao
+    }
+    VENDA {
+        int id_venda PK
+        datetime dt_venda
+        decimal vl_desconto
+        decimal vl_total
+        enum st_venda
+        string nr_documento_fiscal
+        bool fl_maioridade_conferida
+    }
+    FIADO {
+        int id_fiado PK
+        datetime dt_abertura
+        date dt_vencimento
+        decimal vl_total
+        decimal vl_pago
+        enum st_fiado
+    }
+    ITEM_VENDA {
+        int id_item_venda PK
+        enum tp_item
+        int qt_item
+        decimal vl_unitario
+        decimal vl_subtotal
+    }
+    PAGAMENTO {
+        int id_pagamento PK
+        enum tp_forma
+        decimal vl_pago
+        datetime dt_pagamento
+    }
+    ITEM_FIADO {
+        int id_item_fiado PK
+        datetime dt_lancamento
+    }
+    PAGAMENTO_FIADO {
+        int id_pagamento_fiado PK
+        enum tp_forma
+        decimal vl_pago
+        datetime dt_pagamento
+    }
+    FORNECEDOR {
+        int id_fornecedor PK
+        string nm_fornecedor
+        string nr_cnpj UK
+        string nr_telefone
+        enum tp_fornecimento
+        bool fl_ativo
+    }
+    COMPRA {
+        int id_compra PK
+        datetime dt_pedido
+        datetime dt_recebimento
+        enum tp_recebimento
+        string nr_nota_fiscal
+        decimal vl_total
+        enum st_compra
+    }
+    ITEM_COMPRA {
+        int id_item_compra PK
+        int qt_pedida
+        int qt_recebida
+        decimal vl_custo
+        bool fl_conferido
+        string ds_divergencia
+    }
+    LOTE {
+        int id_lote PK
+        string nr_lote
+        date dt_validade
+        int qt_disponivel
+    }
+    MOVIMENTACAO_ESTOQUE {
+        int id_movimentacao PK
+        enum tp_movimento
+        int qt_movimentada
+        string ds_motivo
+        datetime dt_movimentacao
+    }
+```
+
+## Relacionamentos com cardinalidade mínima e máxima
+
+Notação (mín,máx) ao lado de cada entidade: quantas vezes uma ocorrência dela participa do relacionamento.
+
+| # | Entidade A | (mín,máx) A | Relacionamento | (mín,máx) B | Entidade B | Chave estrangeira no modelo lógico |
+|---|---|---|---|---|---|---|
+| 1 | CATEGORIA | (0,N) | classifica | (1,1) | PRODUTO | `produto.id_categoria` |
+| 2 | PRODUTO | (1,1) | possui | (1,1) | ESTOQUE | `estoque.id_produto (UNIQUE)` |
+| 3 | PRODUTO | (0,N) | é movimentado em | (1,1) | MOVIMENTACAO_ESTOQUE | `movimentacao_estoque.id_produto` |
+| 4 | FUNCIONARIO | (0,N) | registra | (1,1) | MOVIMENTACAO_ESTOQUE | `movimentacao_estoque.id_funcionario` |
+| 5 | LOTE | (0,N) | é baixado em | (0,1) | MOVIMENTACAO_ESTOQUE | `movimentacao_estoque.id_lote` |
+| 6 | ITEM_COMPRA | (0,N) | origina | (1,1) | LOTE | `lote.id_item_compra` |
+| 7 | FUNCIONARIO | (0,N) | cumpre | (1,1) | ESCALA | `escala.id_funcionario` |
+| 8 | FUNCIONARIO | (0,N) | abre | (1,1) | CAIXA | `caixa.id_funcionario` |
+| 9 | FUNCIONARIO | (0,N) | realiza | (1,1) | VENDA | `venda.id_funcionario` |
+| 10 | CAIXA | (0,N) | agrupa | (1,1) | VENDA | `venda.id_caixa` |
+| 11 | VENDA | (1,N) | contém | (1,1) | ITEM_VENDA | `item_venda.id_venda` |
+| 12 | PRODUTO | (0,N) | é vendido em | (1,1) | ITEM_VENDA | `item_venda.id_produto` |
+| 13 | VENDA | (1,N) | é paga por | (1,1) | PAGAMENTO | `pagamento.id_venda` |
+| 14 | CLIENTE | (0,N) | possui | (1,1) | FIADO | `fiado.id_cliente` |
+| 15 | FIADO | (0,N) | recebe | (1,1) | PAGAMENTO_FIADO | `pagamento_fiado.id_fiado` |
+| 16 | CAIXA | (0,N) | recebe | (1,1) | PAGAMENTO_FIADO | `pagamento_fiado.id_caixa` |
+| 17 | VENDA | (0,1) | pode gerar | (1,1) | FIADO | `fiado.id_venda (UNIQUE)` |
+| 18 | ITEM_VENDA | (0,1) | pode compor | (1,1) | ITEM_FIADO | `item_fiado.id_item_venda (UNIQUE)` |
+| 19 | FORNECEDOR | (0,N) | fornece | (1,1) | COMPRA | `compra.id_fornecedor` |
+| 20 | FUNCIONARIO | (0,N) | realiza | (1,1) | COMPRA | `compra.id_funcionario` |
+| 21 | COMPRA | (1,N) | contém | (1,1) | ITEM_COMPRA | `item_compra.id_compra` |
+| 22 | PRODUTO | (0,N) | é comprado em | (1,1) | ITEM_COMPRA | `item_compra.id_produto` |
+
+## O que foi corrigido em relação ao DER anterior
+
+- **Cardinalidade mínima e máxima** em todos os 22 relacionamentos (antes só havia 1 e N).
+- **Sem chaves estrangeiras** no modelo conceitual, e **identificador (PK) marcado** em todas as entidades.
+- **ESTOQUE** agora liga a **PRODUTO** (1:1), não a VENDA. A venda reduz o estoque por meio de ITEM_VENDA e MOVIMENTACAO_ESTOQUE, como a justificativa técnica já defendia.
+- **VENDA e PAGAMENTO** têm **um só** relacionamento (1 venda tem 1 a N pagamentos, o que cobre o pagamento dividido).
+- **FUNCIONARIO** passou a ligar a **COMPRA** e a **MOVIMENTACAO_ESTOQUE**, que já tinham `id_funcionario`.
+- Entidades desejáveis incluídas: **CAIXA** (abertura e fechamento), **LOTE** (validade) e **ESCALA** (turnos).
+- **FIADO** passou a nascer de uma única **VENDA**, e cada **ITEM_FIADO** aponta para a linha de **ITEM_VENDA** de onde veio (relacionamentos 17 e 18). Produto, quantidade e preço não são copiados: ficam só em ITEM_VENDA.
+- **LOTE**: um **ITEM_COMPRA** pode originar vários lotes, porque a mesma entrega pode trazer validades diferentes (relacionamento 6, sem UNIQUE).
+- Modelo desenhado em Mermaid (texto), sem aparência de imagem gerada, e versionado junto do código.
+
+## Regra para pagamento dividido e fiado
+
+Uma conta de fiado corresponde a uma única venda e guarda somente os itens da venda que foram destinados ao pagamento posterior. Para manter o vínculo rastreável, `FIADO` referencia `VENDA` e cada `ITEM_FIADO` referencia o respectivo `ITEM_VENDA`. A divisão é feita por linha de item: uma linha é paga no ato ou fica no fiado; se necessário, o mesmo produto pode aparecer em linhas separadas. O pagamento com forma `FIADO` não aponta para o fiado: a ligação é feita pela própria venda (`fiado.id_venda`), e o valor FIADO deve ser igual ao total das linhas marcadas em `ITEM_FIADO`. Os pagamentos posteriores são registrados exclusivamente em `PAGAMENTO_FIADO`, abatendo `vl_pago` e o saldo devedor; eles não são somados novamente aos pagamentos da venda original.
+
+## Entidades e atributos (conceitual)
+
+### CATEGORIA
+
+Agrupa os produtos da adega e define se a venda é restrita a maiores de 18 anos.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_categoria | Identificador da categoria | PK |
+| nm_categoria | Nome da categoria | único |
+| fl_restrita_maiores | Indica se os produtos da categoria só podem ser vendidos a maiores de 18 anos |  |
+
+### PRODUTO
+
+Item comercializado: bebida, cigarro, petisco ou conveniência. Pode ser vendido fechado (unidade) ou em doses.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_produto | Identificador do produto | PK |
+| cd_barras | Código de barras (EAN-8, EAN-13 ou EAN-14) lido no balcão | único |
+| nm_produto | Nome comercial com a medida |  |
+| vl_venda | Preço de venda da unidade fechada |  |
+| fl_vende_dose | Indica se o produto também é vendido em doses |  |
+| qt_ml_garrafa | Volume da garrafa em mililitros |  |
+| qt_ml_dose | Volume de uma dose em mililitros |  |
+| vl_dose | Preço de uma dose |  |
+| fl_ativo | Indica se o produto está ativo para venda |  |
+
+### ESTOQUE
+
+Saldo atual de cada produto (relação 1:1 com PRODUTO). Só muda por meio de MOVIMENTACAO_ESTOQUE.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_estoque | Identificador do registro de estoque | PK |
+| qt_atual | Quantidade atual em unidades |  |
+| qt_minima | Quantidade mínima antes de repor (ponto de reposição) |  |
+| ds_localizacao | Localização geral do produto no armazenamento |  |
+| dt_atualizacao | Data e hora da última alteração do saldo |  |
+
+### FUNCIONARIO
+
+Pessoa da equipe (3 a 4 funcionários) que usa o sistema. Perfis: atendente e gerente.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_funcionario | Identificador do funcionário | PK |
+| nm_funcionario | Nome completo |  |
+| nr_cpf | CPF do funcionário (dado pessoal, LGPD) | único |
+| tp_cargo | Perfil de acesso no sistema |  |
+| ds_login | Nome de usuário para entrar no sistema | único |
+| ds_senha_hash | Hash da senha (bcrypt ou argon2) |  |
+| dt_admissao | Data de entrada na adega |  |
+| fl_ativo | Indica se o funcionário ainda atua |  |
+
+### ESCALA
+
+Turno de trabalho de um funcionário em um dia, com a função que ele exerce.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_escala | Identificador do turno | PK |
+| dt_turno | Dia do turno |  |
+| hr_inicio | Hora de início |  |
+| hr_fim | Hora de término |  |
+| ds_funcao | Função exercida no turno |  |
+
+### CLIENTE
+
+Cliente cadastrado para comprar fiado. Reúne dados pessoais protegidos pela LGPD.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_cliente | Identificador do cliente | PK |
+| nm_cliente | Nome completo |  |
+| nr_cpf | CPF do cliente (dado pessoal, LGPD) | único |
+| dt_nascimento | Data de nascimento, para comprovar maioridade |  |
+| nr_telefone | Telefone com DDD, para cobrança |  |
+| vl_limite_fiado | Limite de saldo devedor autorizado |  |
+| fl_bloqueado | Indica se o cliente está impedido de comprar fiado |  |
+| dt_consentimento_lgpd | Momento em que o cliente consentiu o uso dos dados |  |
+| dt_cadastro | Data e hora do cadastro |  |
+
+### CAIXA
+
+Sessão de caixa, da abertura ao fechamento, com a conferência do dinheiro.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_caixa | Identificador da sessão de caixa | PK |
+| dt_abertura | Data e hora de abertura |  |
+| dt_fechamento | Data e hora de fechamento |  |
+| vl_troco_inicial | Dinheiro de troco colocado na abertura |  |
+| vl_esperado | Dinheiro que deveria estar na gaveta no fechamento |  |
+| vl_contado | Dinheiro contado fisicamente no fechamento |  |
+| vl_diferenca | Diferença entre o contado e o esperado |  |
+| st_caixa | Situação da sessão |  |
+| ds_observacao | Justificativa da diferença e registro de sangrias |  |
+
+### VENDA
+
+Venda feita no balcão, ligada ao funcionário e ao caixa aberto.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_venda | Identificador da venda | PK |
+| dt_venda | Data e hora da venda |  |
+| vl_desconto | Desconto concedido na venda |  |
+| vl_total | Valor total cobrado |  |
+| st_venda | Situação da venda |  |
+| nr_documento_fiscal | Chave de acesso da NFC-e ou número do cupom fiscal |  |
+| fl_maioridade_conferida | Indica que o atendente conferiu a maioridade do comprador |  |
+
+### FIADO
+
+Conta de fiado de uma única venda, aberta para um cliente, com prazo e saldo.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_fiado | Identificador do fiado | PK |
+| dt_abertura | Data e hora de abertura da conta |  |
+| dt_vencimento | Data limite para pagamento |  |
+| vl_total | Total lançado na conta |  |
+| vl_pago | Total já pago |  |
+| st_fiado | Situação da conta |  |
+
+### ITEM_VENDA
+
+Produto vendido em uma venda, com quantidade e preço do momento.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_item_venda | Identificador do item da venda | PK |
+| tp_item | Indica se foi vendida a unidade fechada ou uma dose |  |
+| qt_item | Quantidade vendida |  |
+| vl_unitario | Preço unitário no momento da venda |  |
+| vl_subtotal | Valor do item |  |
+
+### PAGAMENTO
+
+Forma de pagamento de uma venda. Uma venda pode ter vários pagamentos (pagamento dividido). Na forma FIADO, o valor é a parcela que ficou na conta de fiado da venda.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_pagamento | Identificador do pagamento | PK |
+| tp_forma | Forma de pagamento |  |
+| vl_pago | Valor pago nesta forma |  |
+| dt_pagamento | Data e hora do pagamento |  |
+
+### ITEM_FIADO
+
+Marca a linha da venda original destinada integralmente ao fiado. Produto, quantidade e preço ficam na linha de ITEM_VENDA.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_item_fiado | Identificador do item do fiado | PK |
+| dt_lancamento | Data e hora do lançamento |  |
+
+### PAGAMENTO_FIADO
+
+Pagamento (total ou parcial) recebido para abater um fiado.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_pagamento_fiado | Identificador do pagamento do fiado | PK |
+| tp_forma | Forma usada para quitar |  |
+| vl_pago | Valor recebido |  |
+| dt_pagamento | Data e hora do recebimento |  |
+
+### FORNECEDOR
+
+Empresa que vende mercadoria para a adega, com entrega ou retirada.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_fornecedor | Identificador do fornecedor | PK |
+| nm_fornecedor | Razão social ou nome fantasia |  |
+| nr_cnpj | CNPJ do fornecedor | único |
+| nr_telefone | Telefone de contato com DDD |  |
+| tp_fornecimento | Como o fornecedor costuma atender |  |
+| fl_ativo | Indica se o fornecedor está ativo |  |
+
+### COMPRA
+
+Pedido de compra feito a um fornecedor por um funcionário.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_compra | Identificador da compra | PK |
+| dt_pedido | Data e hora do pedido |  |
+| dt_recebimento | Data e hora do recebimento |  |
+| tp_recebimento | Como a mercadoria chegou |  |
+| nr_nota_fiscal | Número ou chave da nota fiscal do fornecedor |  |
+| vl_total | Valor total do pedido |  |
+| st_compra | Situação da compra |  |
+
+### ITEM_COMPRA
+
+Produto pedido em uma compra, com quantidade pedida, recebida e conferência.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_item_compra | Identificador do item da compra | PK |
+| qt_pedida | Quantidade pedida ao fornecedor |  |
+| qt_recebida | Quantidade realmente recebida |  |
+| vl_custo | Custo unitário pago ao fornecedor |  |
+| fl_conferido | Indica que o item foi conferido no recebimento |  |
+| ds_divergencia | Descrição de erro, falta ou avaria |  |
+
+### LOTE
+
+Lote recebido de produto com validade. Permite controlar vencimento e vender primeiro o que vence antes.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_lote | Identificador do lote | PK |
+| nr_lote | Número do lote impresso na embalagem |  |
+| dt_validade | Data de validade do lote |  |
+| qt_disponivel | Quantidade ainda disponível no lote |  |
+
+### MOVIMENTACAO_ESTOQUE
+
+Histórico de toda entrada e saída de estoque. Não pode ser alterado nem excluído.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_movimentacao | Identificador da movimentação | PK |
+| tp_movimento | Tipo da movimentação |  |
+| qt_movimentada | Quantidade movimentada, sempre positiva |  |
+| ds_motivo | Motivo da movimentação |  |
+| dt_movimentacao | Data e hora da movimentação |  |
