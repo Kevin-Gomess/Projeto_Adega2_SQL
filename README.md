@@ -65,7 +65,7 @@ O sistema proposto contempla a gestão das principais informações da Adega do 
 - Cadastro de funcionários e escalas;
 - Controle de abertura e fechamento de caixa;
 - Registro de ações importantes realizadas no sistema.
-O modelo conceitual possui 18 entidades de negócio. Na implementação lógica, foram consideradas 19 tabelas: as 18 tabelas correspondentes às entidades de negócio e a tabela adicional log_acesso, destinada ao registro de eventos e ao apoio à auditoria.
+O modelo conceitual possui 18 entidades de negócio. Na implementação lógica há 21 tabelas: as 18 correspondentes às entidades de negócio e três tabelas de apoio criadas na implementação: log_acesso (registro de eventos e auditoria), garrafa_aberta (volume restante das garrafas abertas para dose) e movimentacao_caixa (suprimentos, sangrias e despesas do caixa).
 
 Justificativa da escolha
 
@@ -167,9 +167,9 @@ RF05	O sistema deve permitir registrar saídas de produtos, identificando o moti
 RF06	O sistema deve permitir registrar a abertura de garrafas destinadas à venda de doses como saída de estoque.
 RF07	O sistema deve permitir registrar vendas com data, funcionário, caixa, produtos, quantidades, preços unitários e valor total.
 RF08	O sistema deve permitir registrar uma ou mais formas de pagamento utilizadas em uma venda.
-RF09	O sistema deve permitir cadastrar clientes e registrar quais estão autorizados a realizar compras por fiado. A autorização explícita ainda depende da inclusão de um campo específico no SQL.
+RF09	O sistema deve permitir cadastrar clientes e registrar quais estão autorizados a realizar compras por fiado. O cliente é cadastrado bloqueado para fiado e só é liberado pelo gerente, que também define o limite.
 RF10	O sistema deve permitir registrar fiados vinculados a uma venda, identificando o cliente e os itens que ficaram pendentes.
-RF11	O sistema deve permitir registrar e consultar o limite de fiado de cada cliente e verificar o limite disponível antes de uma nova operação. A validação depende de campo e implementação específicos ainda pendentes de conferência.
+RF11	O sistema deve permitir registrar e consultar o limite de fiado de cada cliente e verificar o limite disponível antes de uma nova operação.
 RF12	O sistema deve permitir cadastrar fornecedores com seus dados de identificação e contato.
 RF13	O sistema deve permitir registrar compras de fornecedores, incluindo produtos, quantidades, preços e valores.
 RF14	O sistema deve permitir identificar produtos que estejam no estoque mínimo ou abaixo dele.
@@ -183,6 +183,8 @@ RF21	O sistema deve permitir identificar produtos vencidos ou próximos do venci
 RF22	O sistema deve permitir cadastrar escalas dos funcionários, informando dia, horário e função.
 RF23	O sistema deve permitir registrar perdas, quebras e ajustes de estoque, identificando o motivo e o funcionário responsável.
 RF24	O sistema deve permitir registrar a conferência dos itens recebidos em compras e suas possíveis divergências.
+RF25	O sistema deve permitir registrar suprimentos, sangrias e despesas em dinheiro no caixa aberto, para que o valor esperado do fechamento considere essas movimentações.
+RF26	O sistema deve permitir controlar o volume restante de cada garrafa aberta para venda de doses, impedindo a venda de doses acima do volume disponível.
 
 
 Requisitos não funcionais
@@ -203,36 +205,36 @@ As regras completas estão disponíveis em [`Levantamento/regras_de_negocio.md`]
 
 As regras abaixo representam condições operacionais e restrições consideradas no sistema. As regras propostas devem ser validadas com o responsável antes de serem tratadas como procedimentos já vigentes na adega.
 Código	Regra de negócio
-RN01	O sistema deve aceitar os pagamentos por Pix, dinheiro, cartão de crédito e cartão de débito.
-RN02	Cada venda registrada deve possuir data, funcionário responsável e seus respectivos itens.
-RN03	O valor total da venda deve corresponder à soma dos valores de seus itens, considerando os descontos aplicáveis.
-RN04	Uma venda pode possuir vários itens, e cada item deve identificar o produto, a quantidade e o preço praticado.
-RN05	Toda movimentação de estoque deve identificar o produto, o tipo de movimentação, a quantidade e a data.
-RN06	A abertura de uma garrafa para venda em doses deve gerar a saída correspondente do estoque de garrafas fechadas.
-RN07	Uma mesma venda pode possuir mais de uma forma de pagamento, desde que os valores registrados correspondam ao total devido.
-RN08	O fiado somente pode ser concedido a clientes identificados e autorizados pela organização.
-RN09	Cada registro de fiado deve estar vinculado à venda que originou a dívida.
-RN10	O sistema deve manter o limite de fiado definido para cada cliente autorizado, caso esse limite seja adotado e armazenado.
-RN11	Antes de registrar um novo fiado, o sistema deve verificar a autorização do cliente e o limite disponível. A autorização explícita depende de alteração no banco e implementação da validação.
-RN12	O saldo devedor deve ser atualizado conforme os pagamentos realizados.
-RN13	Os pagamentos de fiado devem registrar data, valor e forma de recebimento.
-RN14	O sistema deve permitir identificar fiados em aberto e quitados, considerando os pagamentos registrados.
-RN15	Perdas, quebras e vencimentos devem ser registrados como movimentações de saída, com seus respectivos motivos.
-RN16	Os ajustes de estoque devem registrar a quantidade ajustada, a data, o motivo e o funcionário responsável.
-RN17	A quantidade disponível em estoque deve ser atualizada conforme as entradas e saídas efetivamente registradas.
-RN18	A validade dos produtos que necessitam desse controle deve ser registrada por lote.
-RN19	Produtos vencidos não devem ser disponibilizados para venda e devem ter sua saída registrada.
-RN20	Cada item de compra deve identificar o produto e a quantidade comprada.
-RN21	A conferência do recebimento deve permitir identificar produtos faltantes, incorretos ou avariados.
-RN22	A abertura de caixa deve registrar o funcionário responsável e o valor inicial.
-RN23	O fechamento de caixa deve comparar o valor esperado com o valor contado e registrar possíveis diferenças.
-RN24	As movimentações financeiras devem estar associadas ao caixa correspondente, conforme o tipo de operação.
-RN25	A escala deve identificar o funcionário, o dia, o horário e a função exercida.
-RN26	O sistema deve impedir a venda de bebidas alcoólicas para menores de 18 anos, conforme as exigências legais aplicáveis.
-RN27	O sistema deve respeitar as restrições legais aplicáveis à comercialização de produtos de tabaco.
-RN28	A emissão e o registro de documentos fiscais devem respeitar as exigências legais aplicáveis à organização.
-RN29	Os dados pessoais devem ser tratados conforme a LGPD, com acesso limitado e utilização adequada à finalidade do sistema.
-RN30	Ações importantes realizadas no sistema devem poder ser registradas para fins de auditoria.
+RN01	Uma venda pode ser paga em dinheiro, Pix, cartão de débito ou cartão de crédito. Também pode ter uma parte do valor lançada como fiado, desde que sejam atendidas as regras de autorização e limite do cliente.
+RN02	Toda venda deve possuir data e hora, funcionário responsável, caixa relacionado e pelo menos um item registrado.
+RN03	O valor total da venda deve corresponder à soma dos subtotais dos itens, considerando os descontos aplicados.
+RN04	Cada item de uma venda deve identificar o produto, o tipo de comercialização, a quantidade e o preço unitário aplicado no momento da venda.
+RN05	Toda movimentação de estoque deve identificar o produto, o tipo de movimentação, a quantidade, a data e o funcionário responsável.
+RN06	Quando uma garrafa for aberta para venda de doses, a abertura deve ser registrada como saída de uma unidade fechada do estoque, conforme o controle adotado para o produto. O volume restante da garrafa aberta é controlado em mililitros e cada dose vendida o reduz; não se vende dose acima do volume restante.
+RN07	Uma venda pode possuir mais de um registro de pagamento. A soma dos valores registrados nas diferentes formas de pagamento, incluindo a parcela destinada ao fiado, deve corresponder ao total da venda. O valor lançado como fiado deve gerar ou atualizar a conta correspondente do cliente.
+RN08	Para realizar uma operação com fiado, o cliente deve estar cadastrado e identificado no sistema.
+RN09	Toda conta de fiado deve estar relacionada à venda que originou o valor pendente e ao cliente responsável pela dívida.
+RN10	Cada cliente deve possuir um limite de crédito definido no cadastro. O valor pendente não pode ultrapassar o limite autorizado.
+RN11	Antes de registrar uma nova parcela no fiado, o sistema deve verificar se o cliente não está bloqueado e se possui limite disponível. O limite disponível corresponde ao limite cadastrado menos os valores ainda pendentes.
+RN12	Todo pagamento de fiado deve ser considerado no cálculo do valor já pago e do saldo pendente da conta.
+RN13	Cada recebimento de fiado deve registrar a conta correspondente, o valor recebido, a forma de pagamento, a data e o caixa responsável.
+RN14	Uma conta deve permanecer com situação ABERTO enquanto o valor pago for menor que o valor total devido. Quando o valor pago alcançar o valor total, a situação deve ser QUITADO.
+RN15	Produtos perdidos, quebrados, vencidos ou retirados por outros motivos devem ter sua saída registrada com a quantidade, a data, o motivo e o funcionário responsável.
+RN16	Toda correção manual de estoque deve registrar a quantidade movimentada, a data, o motivo e o funcionário responsável.
+RN17	O saldo do estoque deve refletir as entradas e saídas registradas nas movimentações.
+RN18	Produtos que exigem controle de validade devem possuir registro de lote e data de vencimento.
+RN19	Produtos com validade vencida não devem ser disponibilizados para venda e sua retirada deve ser registrada no estoque.
+RN20	Cada item de uma compra deve identificar o produto, a quantidade solicitada e o custo unitário.
+RN21	No recebimento de uma compra, a quantidade recebida deve ser conferida com a quantidade solicitada. Faltas, produtos incorretos ou avarias devem ser registrados.
+RN22	Toda abertura de caixa deve registrar o funcionário responsável, a data e hora e o valor inicial disponível.
+RN23	No fechamento, o valor contado deve ser comparado com o valor esperado. O valor esperado considera o troco inicial, as vendas e os recebimentos de fiado em dinheiro, os suprimentos e, como saída, as sangrias e despesas. Diferenças devem ser registradas e justificadas.
+RN24	Vendas e recebimentos de fiado devem ser relacionados ao caixa em que ocorreram, para permitir a conferência dos valores.
+RN25	Toda escala deve identificar o funcionário, o dia de trabalho, o horário de início, o horário de término e a função exercida.
+RN26	É proibido vender, fornecer ou entregar bebidas alcoólicas a crianças e adolescentes menores de 18 anos. A maioridade deve ser conferida antes da conclusão da venda.
+RN27	A comercialização de produtos fumígenos deve respeitar as restrições legais, incluindo a proibição de venda a menores de 18 anos, as advertências sanitárias obrigatórias e as regras de exposição dos produtos nos pontos de venda.
+RN28	As operações de venda e compra devem ter seus documentos fiscais registrados e emitidos conforme as obrigações aplicáveis ao enquadramento tributário e à legislação estadual da organização.
+RN29	Os dados pessoais de clientes e funcionários devem ser utilizados somente para finalidades relacionadas às atividades da organização, com acesso restrito e tratamento adequado conforme a LGPD.
+RN30	As operações importantes do sistema, como acessos, inclusões, alterações, exclusões e consultas a dados pessoais, devem possuir registro de auditoria, identificando o funcionário, a data, o tipo de evento e o registro envolvido.
 
 
 Observação sobre implementação: prazos específicos para pagamento de fiado, período de aviso de vencimento e demais limites operacionais dependem de confirmação do responsável. O controle de fiados vencidos também depende da existência de um prazo ou data de vencimento armazenada. Não apresentar esses controles como implementados enquanto não forem confirmados e incluídos no modelo e no SQL.
@@ -273,7 +275,7 @@ O DER revisado contém as seguintes 18 entidades de negócio:
 16. ITEM_COMPRA
 17. LOTE
 18. MOVIMENTACAO_ESTOQUE
-A tabela LOG_ACESSO foi considerada adicional na implementação lógica, com finalidade técnica de auditoria, e não como entidade de negócio do DER conceitual.
+As tabelas LOG_ACESSO, GARRAFA_ABERTA e MOVIMENTACAO_CAIXA foram acrescentadas na implementação lógica, com finalidade técnica e de controle, e não são entidades de negócio do DER conceitual. [CONFERIR com o grupo: se preferirem, incluir essas duas últimas no DER conceitual para o diagrama refletir as 20 entidades de negócio.]
 1.2 Conversão do Modelo Conceitual para o Modelo Lógico
 A conversão do modelo conceitual para o modelo lógico foi realizada transformando as entidades em tabelas, seus atributos em colunas e os relacionamentos em chaves primárias e estrangeiras.
 
@@ -285,7 +287,9 @@ Conversão dos relacionamentos
 - Relacionamentos 1:N: foram implementados por meio de chaves estrangeiras no lado N.
 - Relacionamentos 1:1: foram implementados por meio de chaves estrangeiras com restrição de unicidade, quando aplicável.
 - Relacionamentos N:N: foram representados por tabelas associativas, como ITEM_VENDA e ITEM_COMPRA.
-- O relacionamento entre ITEM_VENDA e ITEM_FIADO permite identificar quais itens de uma venda ficaram pendentes de pagamento. A tabela ITEM_FIADO contém id_item_fiado, id_item_venda e dt_lancamento; produto, quantidade e preço são consultados em ITEM_VENDA.
+- O relacionamento entre ITEM_VENDA e ITEM_FIADO permite identificar quais linhas de uma venda tiveram valor lançado no fiado. A tabela ITEM_FIADO contém id_item_fiado, id_item_venda (único), vl_fiado e dt_lancamento; produto, quantidade e preço são consultados em ITEM_VENDA, e vl_fiado diz quanto da linha foi para o fiado (no máximo o subtotal), o que permite pagamento dividido.
+- ITEM_VENDA guarda também id_lote (lote de onde saiu a unidade) e id_garrafa_aberta (garrafa de onde saiu a dose), ambos opcionais e chaves estrangeiras.
+- GARRAFA_ABERTA possui FKs para LOTE, PRODUTO e FUNCIONARIO; MOVIMENTACAO_CAIXA possui FKs para CAIXA e FUNCIONARIO.
 - A tabela FIADO possui as FKs id_venda e id_cliente. O campo fiado.id_venda é UNIQUE; portanto, uma venda pode gerar no máximo um registro de fiado.
 - A tabela PAGAMENTO não possui id_fiado. Quando o pagamento da venda é do tipo fiado, a associação ao fiado ocorre por meio da venda de origem. Os recebimentos posteriores são registrados em PAGAMENTO_FIADO, que possui FKs para FIADO e CAIXA.
 - Não existe relacionamento direto entre FIADO e ITEM_FIADO; a ligação é realizada por ITEM_VENDA.
@@ -295,17 +299,15 @@ Decisões de conversão
 
 A tabela ESTOQUE mantém o controle da quantidade total de cada produto. A organização física do estoque não foi dividida em diferentes locais no modelo, pois o levantamento não identificou a necessidade de controlar quantidades separadamente por localização.
 
-A relação conceitual entre PRODUTO e ESTOQUE foi definida como 1:1. No SQL, estoque.id_produto possui NOT NULL e UNIQUE, garantindo que cada registro de estoque esteja associado a um único produto e impedindo mais de um registro de estoque para o mesmo produto. Essa restrição, porém, não obriga que todo produto cadastrado tenha um registro correspondente em estoque. Portanto, a participação obrigatória de todo produto no relacionamento conceitual não é totalmente garantida apenas pela restrição atual do banco.
+A relação conceitual entre PRODUTO e ESTOQUE foi definida como 1:1. No SQL, estoque.id_produto possui NOT NULL e UNIQUE, garantindo que cada registro de estoque esteja associado a um único produto e impedindo mais de um registro de estoque para o mesmo produto. Essa restrição, sozinha, não obriga que todo produto tenha estoque; por isso o trigger trg_produto_cria_estoque cria o registro de estoque a cada produto inserido, garantindo na prática a participação obrigatória.
 
 O controle de validade foi estruturado por lote, pois um mesmo produto pode possuir diferentes datas de vencimento.
 
 O fiado foi modelado como um registro associado à venda de origem, mantendo os recebimentos posteriores em uma tabela própria. Dessa forma, o pagamento da venda e a quitação da dívida são operações distintas.
 
-Autorização para fiado — ajuste pendente
+Autorização para fiado
 
-A regra de negócio estabelece que o fiado somente pode ser concedido a clientes conhecidos ou autorizados. Entretanto, a estrutura SQL analisada possui cliente.fl_bloqueado, mas não possui um campo específico fl_fiado_autorizado.
-
-Recomenda-se acrescentar fl_fiado_autorizado TINYINT(1) NOT NULL DEFAULT 0 à tabela CLIENTE, atualizar o modelo lógico e o dicionário de dados e implementar a validação correspondente. Até que essa alteração seja feita e testada, a autorização explícita para fiado deve ser tratada como melhoria pendente, e não como funcionalidade já implementada.
+A regra de negócio diz que o fiado só é concedido a clientes conhecidos e autorizados. No SQL isso é feito com cliente.fl_bloqueado, que nasce com valor 1 (bloqueado). Somente o gerente libera o cliente e define o limite, pela procedure sp_autorizar_cliente_fiado, e a procedure sp_registrar_venda_fiado recusa cliente bloqueado ou sem limite disponível. Por isso não foi criado um campo fl_fiado_autorizado separado.
 
 Arquivos do modelo lógico
 - Arquivo editável: [`Diagramas/modelo_logico.brm`](Diagramas/modelo_logico.brm).
@@ -316,7 +318,7 @@ As chaves primárias identificam exclusivamente cada registro. As chaves estrang
 
 A relação completa das PKs e FKs deve seguir exatamente o modelo lógico e o script SQL oficial do grupo.
 
-Conferência dos 23 relacionamentos do modelo lógico
+Conferência dos 30 relacionamentos do modelo lógico
 
 A tabela abaixo resume as relações representadas no modelo lógico. A notação apresenta as cardinalidades mínimas e máximas de cada lado.
 Nº	Relacionamento	FK no SQL
@@ -343,6 +345,13 @@ Nº	Relacionamento	FK no SQL
 21	Compra (1,N) — Item da Compra (1,1)	item_compra.id_compra
 22	Produto (0,N) — Item da Compra (1,1)	item_compra.id_produto
 23	Funcionário (0,N) — Log de Acesso (0,1)	log_acesso.id_funcionario
+24	Lote (0,N) — Item da Venda (0,1)	item_venda.id_lote
+25	Garrafa Aberta (0,N) — Item da Venda (0,1)	item_venda.id_garrafa_aberta
+26	Lote (0,N) — Garrafa Aberta (1,1)	garrafa_aberta.id_lote
+27	Produto (0,N) — Garrafa Aberta (1,1)	garrafa_aberta.id_produto
+28	Funcionário (0,N) — Garrafa Aberta (1,1)	garrafa_aberta.id_funcionario
+29	Caixa (0,N) — Movimentação do Caixa (1,1)	movimentacao_caixa.id_caixa
+30	Funcionário (0,N) — Movimentação do Caixa (1,1)	movimentacao_caixa.id_funcionario
 
 
 Pontos de atenção na conferência do diagrama
@@ -351,7 +360,8 @@ Pontos de atenção na conferência do diagrama
 - lote.id_item_compra não possui UNIQUE; um item de compra pode originar vários lotes.
 - movimentacao_estoque.id_lote aceita NULL; por isso, uma movimentação pode não estar vinculada a um lote.
 - pagamento não possui FK direta para fiado.
-- estoque.id_produto é UNIQUE, mas o SQL atual não garante que todo produto tenha obrigatoriamente um registro em estoque.
+- estoque.id_produto é UNIQUE e o trigger trg_produto_cria_estoque cria o registro de estoque (zerado) a cada produto cadastrado; assim todo produto passa a ter estoque, embora a restrição de chave sozinha não exija isso.
+- item_venda.id_lote e item_venda.id_garrafa_aberta aceitam NULL: o lote é exigido pelo trigger quando o produto controla validade e o item é UNIDADE; a garrafa é exigida quando o item é DOSE.
 - log_acesso.id_funcionario aceita NULL; por isso, o vínculo do registro de auditoria com um funcionário é opcional.
 Tabelas e suas chaves principais
 Tabela	Chave primária	Referências principais
@@ -363,7 +373,7 @@ escala	id_escala	id_funcionario
 caixa	id_caixa	id_funcionario
 cliente	id_cliente	—
 venda	id_venda	id_funcionario, id_caixa
-item_venda	id_item_venda	id_venda, id_produto
+item_venda	id_item_venda	id_venda, id_produto, id_lote (opcional), id_garrafa_aberta (opcional)
 pagamento	id_pagamento	id_venda
 fiado	id_fiado	id_cliente, id_venda
 item_fiado	id_item_fiado	id_item_venda
@@ -373,6 +383,8 @@ compra	id_compra	id_fornecedor, id_funcionario
 item_compra	id_item_compra	id_compra, id_produto
 lote	id_lote	id_item_compra
 movimentacao_estoque	id_movimentacao	id_produto, id_lote, id_funcionario
+garrafa_aberta	id_garrafa_aberta	id_lote, id_produto, id_funcionario
+movimentacao_caixa	id_movimentacao_caixa	id_caixa, id_funcionario
 log_acesso	id_log	id_funcionario (FK, aceita NULL)
 
 
@@ -446,12 +458,15 @@ Decisões arquiteturais
 - O fiado possui registro próprio e pagamentos posteriores separados dos pagamentos da venda.
 - A tabela LOG_ACESSO foi incluída na implementação lógica para apoiar o registro de ações importantes.
 - A tabela CAIXA permite organizar as operações financeiras previstas no sistema por abertura e fechamento.
-Limitações técnicas identificadas
-- A inserção de um item em ITEM_VENDA, por si só, não garante a criação de uma movimentação de saída de estoque. Para manter as quantidades sincronizadas, a aplicação ou uma rotina do banco precisa registrar a movimentação correspondente.
-- A estrutura de ITEM_VENDA não identifica diretamente o lote consumido na venda. Assim, o vínculo entre uma saída de venda e um lote específico não está garantido pelo modelo atual.
-- A tabela LOG_ACESSO permite armazenar eventos, mas o registro efetivo depende da aplicação ou de rotinas específicas. A existência da tabela, sozinha, não comprova que todos os eventos estejam sendo registrados.
-- A validação de limite de crédito do fiado e a autorização explícita do cliente precisam ser conferidas na implementação.
-- As restrições de vencimento e bloqueio de produtos vencidos precisam ser verificadas na aplicação e nas rotinas do banco.
+Regras garantidas no banco e limitações
+- A venda de unidade gera sozinha a saída de estoque (trigger trg_item_venda_registra_saida); o saldo do produto e do lote só muda por movimentação (trigger trg_movimentacao_atualiza_estoque). A consulta de auditoria A01 confere os saldos.
+- O item de venda informa o lote (unidade) ou a garrafa aberta (dose); o trigger recusa lote de outro produto, lote vencido ou sem saldo. Assim o vínculo entre venda e lote existe e é validado.
+- Produto vencido não é vendido (triggers) e a abertura de garrafa de lote vencido é recusada. O que vence e fica parado no estoque precisa ser baixado como PERDA por um funcionário; a consulta A18 lista esses lotes.
+- O fiado tem prazo (dt_vencimento); o controle do que está vencido é feito por consulta (G07 e A12). Não existe trigger que bloqueie sozinho o cliente em atraso: o gerente o bloqueia por UPDATE em cliente.fl_bloqueado, e a A12 aponta quem está em atraso e não bloqueado.
+- A auditoria em log_acesso é gravada por triggers (cliente, fiado, recebimento de fiado e fechamento de caixa) e pela procedure sp_registrar_evento_acesso (login e consulta a dado pessoal), usando a variável @id_funcionario_logado, que a aplicação precisa definir. Se a aplicação não definir, o evento é gravado sem funcionário.
+- Alterações de preço de produto e de outras tabelas não têm trigger de auditoria; ficam como melhoria futura.
+- Cancelamento de venda: o banco permite st_venda = 'CANCELADA', mas não devolve o estoque sozinho; a devolução é feita por um ajuste de estoque feito pelo gerente.
+- Os triggers usam CURRENT_DATE() do servidor para conferir validade e vencimento; os dados de teste respeitam isso (ver seção 4).
 1.6 Proposta de Arquitetura Analítica para BI e IA
 O banco de dados proposto permite organizar informações que podem apoiar a gestão da Adega do Tonho.
 
@@ -497,19 +512,19 @@ Essas aplicações são possibilidades futuras. O banco de dados, por si só, n�
 
 Tabela de rastreabilidade dos problemas e indicadores
 Problema ou KPI	Tabelas envolvidas	Consulta no script
-P1 — Falta de registro detalhado das vendas	VENDA, ITEM_VENDA, PRODUTO	[PREENCHER CÓDIGO REAL]
-P2 — Diferenças no estoque	ESTOQUE, MOVIMENTACAO_ESTOQUE	[PREENCHER CÓDIGO REAL]
-P3 — Dificuldade para identificar produtos com maior saída	ITEM_VENDA, PRODUTO	[PREENCHER CÓDIGO REAL]
-P4 — Identificação de produtos com baixa quantidade	ESTOQUE, PRODUTO	[PREENCHER CÓDIGO REAL]
-P5 — Controle manual do fiado	FIADO, CLIENTE, PAGAMENTO_FIADO	[PREENCHER CÓDIGO REAL]
-KPI01 — Faturamento por período	VENDA	[PREENCHER CÓDIGO REAL]
-KPI02 — Ticket médio	VENDA	[PREENCHER CÓDIGO REAL]
-KPI03 — Produtos mais vendidos	ITEM_VENDA, PRODUTO	[PREENCHER CÓDIGO REAL]
-KPI04 — Produtos no estoque mínimo	ESTOQUE, PRODUTO	[PREENCHER CÓDIGO REAL]
-KPI05 — Saldo de fiado	FIADO, PAGAMENTO_FIADO	[PREENCHER CÓDIGO REAL]
-KPI06 — Fiados vencidos	FIADO, CLIENTE	[PREENCHER CÓDIGO REAL]
-KPI07 — Perdas e quebras	MOVIMENTACAO_ESTOQUE, LOTE, PRODUTO	[PREENCHER CÓDIGO REAL]
-KPI08 — Diferença de caixa	CAIXA, VENDA, PAGAMENTO	[PREENCHER CÓDIGO REAL]
+P1 — Falta de registro detalhado das vendas	VENDA, ITEM_VENDA, PRODUTO	J01, G01, G02, G03, J07
+P2 — Diferenças no estoque	ESTOQUE, MOVIMENTACAO_ESTOQUE	G13, A01, A19
+P3 — Dificuldade para identificar produtos com maior saída	ITEM_VENDA, PRODUTO	G04
+P4 — Identificação de produtos com baixa quantidade	ESTOQUE, PRODUTO	G05
+P5 — Controle manual do fiado	FIADO, CLIENTE, PAGAMENTO_FIADO	G06, G07, A07 a A11
+KPI01 — Faturamento por período	VENDA	G01, G01b
+KPI02 — Ticket médio	VENDA	G02
+KPI03 — Produtos mais vendidos	ITEM_VENDA, PRODUTO	G04
+KPI04 — Produtos no estoque mínimo	ESTOQUE, PRODUTO	G05
+KPI05 — Saldo de fiado	FIADO, PAGAMENTO_FIADO	G06
+KPI06 — Fiados vencidos	FIADO, CLIENTE	G07
+KPI07 — Perdas e quebras	MOVIMENTACAO_ESTOQUE, LOTE, PRODUTO	G08
+KPI08 — Diferença de caixa	CAIXA, VENDA, PAGAMENTO, MOVIMENTACAO_CAIXA	G09, G09b
 
 
 2. Modelo Lógico Relacional
@@ -519,7 +534,7 @@ O modelo lógico apresenta a transformação do DER conceitual em tabelas relaci
 - Arquivo editável: [`Diagramas/modelo_logico.brm`](Diagramas/modelo_logico.brm).
 - Imagem do modelo lógico: [`Diagramas/modelo_logico.png`](Diagramas/modelo_logico.png).
 - Modelo lógico em texto: [`Docs/modelo_logico.md`](Docs/modelo_logico.md).
-O modelo lógico contempla 19 tabelas: 18 tabelas de negócio e a tabela adicional LOG_ACESSO.
+O modelo lógico contempla 21 tabelas: as 18 entidades do DER mais três tabelas de apoio criadas na implementação: LOG_ACESSO (auditoria e LGPD), GARRAFA_ABERTA (venda de doses) e MOVIMENTACAO_CAIXA (suprimento, sangria e despesa do caixa).
 
 As marcações usadas no diagrama têm os seguintes significados:
 - PK: chave primária, identifica cada registro da tabela.
@@ -531,7 +546,12 @@ As restrições de integridade, como NOT NULL, UNIQUE, CHECK e DEFAULT, devem se
 O banco de dados foi estruturado para implementação no SGBD MySQL 8.0.
 - SGBD: MySQL 8.0.
 - Script principal: [`Docs/script.sql`](Docs/script.sql).
-- Script de criação das tabelas: [`Docs/criacao_banco.sql`](Docs/criacao_banco.sql).
+- O `script.sql` já cria o banco, as 21 tabelas, as constraints, os triggers e as procedures (não existe outro arquivo de criação).
+- Testes de INSERT, UPDATE, DELETE, constraints e regras: [`Docs/testes.sql`](Docs/testes.sql).
+- Consultas JOIN, gerenciais (G) e de auditoria (A): [`Docs/consultas.sql`](Docs/consultas.sql).
+- Indicadores, BI e IA: [`Docs/indicadores_kpis.md`](Docs/indicadores_kpis.md).
+- Roteiro do pitch de 8 minutos: [`Docs/roteiro_apresentacao.md`](Docs/roteiro_apresentacao.md).
+- Ordem de execução: `script.sql` → `massa_de_dados.sql` → `testes.sql` → `consultas.sql`.
 - Exemplos de manipulação: [`Docs/exemplos_basicos.sql`](Docs/exemplos_basicos.sql).
 - Massa de dados: [`Docs/massa_de_dados.sql`](Docs/massa_de_dados.sql).
 Estrutura do script
@@ -556,7 +576,7 @@ As consultas de auditoria devem receber códigos como A01, A02 e A03, indicando 
 
 Testes de execução
 
-Preencher somente após executar os arquivos em um ambiente MySQL:
+Preencher somente após executar os arquivos em um ambiente MySQL. Até aqui o script, a massa e as consultas foram conferidos apenas por simulação (sem triggers); a execução real no MySQL 8.0 ainda precisa ser feita pelo grupo:
 - Criação do banco a partir de um banco vazio: [PREENCHER].
 - Criação de todas as tabelas: [PREENCHER].
 - Inserção da massa de dados: [PREENCHER].
@@ -571,7 +591,7 @@ Justificativa do volume de dados
 
 A quantidade de registros deve ser coerente com o porte da organização, considerando a equipe de aproximadamente 3 a 4 pessoas, o funcionamento diário e a variedade de produtos comercializados.
 
-A quantidade final de registros deve ser definida após a conferência dos dados inseridos e dos números aproximados levantados com o responsável.
+A massa simula cerca de 3 meses de funcionamento (03/08/2026 a 01/11/2026), com 4 funcionários, 60 produtos, 5 fornecedores e 12 clientes. Os números reais de vendas por dia ainda não foram confirmados com o responsável, então o volume é uma estimativa do grupo. A massa respeita os triggers: estoque, saída de venda, status do fiado e log de auditoria são preenchidos pelo próprio banco.
 
 Variedade dos dados
 
@@ -592,25 +612,27 @@ A massa de dados deve contemplar diferentes situações para permitir a demonstr
 - Caixas com fechamentos diferentes.
 Quantidade de registros por tabela
 Tabela	Quantidade de registros	Justificativa
-categoria	[PREENCHER]	Categorias dos produtos comercializados.
-produto	[PREENCHER]	Variedade de produtos da adega.
-estoque	[PREENCHER]	Um registro de estoque por produto cadastrado, conforme a regra adotada.
-funcionario	[PREENCHER]	Equipe aproximada de 3 a 4 pessoas.
-escala	[PREENCHER]	Registros de turnos dos funcionários.
-caixa	[PREENCHER]	Registros de abertura e fechamento.
-cliente	[PREENCHER]	Clientes fictícios cadastrados.
-venda	[PREENCHER]	Vendas fictícias em diferentes períodos.
-item_venda	[PREENCHER]	Itens associados às vendas.
-pagamento	[PREENCHER]	Pagamentos realizados nas vendas.
-fiado	[PREENCHER]	Registros fictícios de fiado.
-item_fiado	[PREENCHER]	Itens de venda associados ao fiado.
-pagamento_fiado	[PREENCHER]	Recebimentos totais e parciais.
-fornecedor	[PREENCHER]	Fornecedores fictícios.
-compra	[PREENCHER]	Compras registradas.
-item_compra	[PREENCHER]	Produtos e quantidades das compras.
-lote	[PREENCHER]	Lotes e respectivas datas de validade.
-movimentacao_estoque	[PREENCHER]	Entradas, saídas, perdas e ajustes.
-log_acesso	[PREENCHER]	Registros de ações importantes, caso tenham sido gerados.
+categoria	8	Categorias dos produtos comercializados.
+produto	60	Variedade de produtos da adega, 5 deles vendidos também em dose.
+estoque	60	Um registro de estoque por produto, criado pelo trigger.
+funcionario	4	Equipe de 4 pessoas (1 gerente e 3 atendentes).
+escala	208	Turnos de 13h às 23h (meia-noite de sexta a domingo) nos 91 dias.
+caixa	91	Um caixa por dia; o último fica aberto.
+cliente	12	Clientes fictícios, 2 bloqueados por fiado vencido.
+venda	650	Vendas fictícias (643 concluídas e 7 canceladas) em 3 meses.
+item_venda	1198	Itens das vendas, em unidade e em dose.
+pagamento	749	Pagamentos (inclui a parte FIADO lançada pela procedure).
+fiado	43	Fiados abertos e quitados.
+item_fiado	90	Linhas de venda alocadas ao fiado pela procedure.
+pagamento_fiado	44	Recebimentos totais e parciais.
+fornecedor	5	Fornecedores fictícios (CNPJs inventados).
+compra	86	Compras recebidas, uma cancelada e uma ainda em pedido.
+item_compra	329	Produtos e quantidades das compras.
+lote	275	Lotes com validades diferentes, inclusive vencidos.
+movimentacao_estoque	1593	Entradas, saídas de venda e de dose, perdas, ajustes e devolução.
+garrafa_aberta	6	Garrafas abertas para vender doses.
+movimentacao_caixa	67	Suprimentos, sangrias e despesas do caixa.
+log_acesso	672	Logins, alterações e aprovações registradas pelos triggers e procedures.
 
 
 As quantidades devem ser atualizadas após a execução dos comandos de inserção, utilizando consultas COUNT(*) em cada tabela.
@@ -621,7 +643,7 @@ A versão considerada para avaliação deve estar na branch main, conforme orien
 Organização dos arquivos
 Artefato	Localização
 Relatório Técnico Final	[`README.md`](README.md)
-DER conceitual revisado	Diagramas/der_conceitual [CONFERIR EXTENSÃO]
+DER conceitual revisado	[`Diagramas/der_conceitual.png`](Diagramas/der_conceitual.png) e [`Diagramas/der_conceitual.md`](Diagramas/der_conceitual.md)
 Modelo lógico editável	[`Diagramas/modelo_logico.brm`](Diagramas/modelo_logico.brm)
 Imagem do modelo lógico	[`Diagramas/modelo_logico.png`](Diagramas/modelo_logico.png)
 Modelo lógico em texto	[`Docs/modelo_logico.md`](Docs/modelo_logico.md)
@@ -629,7 +651,10 @@ Normalização	[`Docs/normalizacao.md`](Docs/normalizacao.md)
 Justificativa técnica	[`Docs/justificativa_tecnica.md`](Docs/justificativa_tecnica.md)
 Dicionário de dados	[`Docs/dicionario_dados.html`](Docs/dicionario_dados.html)
 Script SQL	[`Docs/script.sql`](Docs/script.sql)
-Criação do banco	[`Docs/criacao_banco.sql`](Docs/criacao_banco.sql)
+Testes de INSERT/UPDATE/DELETE e constraints	[`Docs/testes.sql`](Docs/testes.sql)
+Consultas JOIN, gerenciais e de auditoria	[`Docs/consultas.sql`](Docs/consultas.sql)
+Indicadores, BI e IA	[`Docs/indicadores_kpis.md`](Docs/indicadores_kpis.md)
+Roteiro do pitch	[`Docs/roteiro_apresentacao.md`](Docs/roteiro_apresentacao.md)
 Exemplos SQL	[`Docs/exemplos_basicos.sql`](Docs/exemplos_basicos.sql)
 Massa de dados	[`Docs/massa_de_dados.sql`](Docs/massa_de_dados.sql)
 Levantamento	[`Levantamento/Levantamento.md`](Levantamento/Levantamento.md)
@@ -669,9 +694,10 @@ Modelo lógico	ChatGPT	Apoio na conversão das entidades em tabelas e na organiz
 Normalização	ChatGPT	Apoio na compreensão e justificativa das formas normais.
 README e documentação	ChatGPT	Organização do conteúdo conforme o esqueleto fornecido pelo professor.
 Processos, requisitos e regras	ChatGPT	Apoio na revisão e ampliação dos documentos.
+Conferência entre arquivos	Claude	Comparação do script SQL com modelo lógico, dicionário de dados, normalização, requisitos, regras e README; lista de divergências e correções.
 Script SQL	[PREENCHER conforme o uso do integrante responsável]	[PREENCHER].
-Massa de dados	[PREENCHER conforme o uso do integrante responsável]	[PREENCHER].
-Consultas e KPIs	[PREENCHER conforme o uso do integrante responsável]	[PREENCHER].
+Massa de dados	Claude	Apoio na criação de um gerador de dados fictícios que respeita os triggers e procedures do script; o grupo deve revisar e rodar no MySQL.
+Consultas e KPIs	Claude	Apoio na escrita das consultas J, G e A, dos testes e do documento de indicadores; o grupo deve rodar e conferir os resultados.
 Apresentação	[PREENCHER conforme o uso do grupo]	[PREENCHER].
 
 
@@ -734,7 +760,7 @@ Checklist final antes da entrega
 - [ ] DER conceitual revisado conforme a notação brModelo.
 - [ ] Modelo lógico atualizado e compatível com o script SQL.
 - [ ] PKs e FKs conferidas em todas as tabelas.
-- [ ] Os 23 relacionamentos do modelo lógico conferidos, incluindo a relação opcional de FUNCIONARIO com LOG_ACESSO.
+- [ ] Os 30 relacionamentos (chaves estrangeiras) do modelo lógico de 21 tabelas conferidos, incluindo a relação opcional de FUNCIONARIO com LOG_ACESSO.
 - [ ] Normalização e justificativas técnicas revisadas.
 - [ ] Dicionário de dados atualizado em um único arquivo HTML.
 - [ ] Script SQL completo e testado do início ao fim em MySQL.
@@ -745,6 +771,6 @@ Checklist final antes da entrega
 - [ ] Histórico de commits e divisão de tarefas conferidos.
 - [ ] Slides preparados para a apresentação de 8 minutos.
 - [ ] Todos os links e caminhos de arquivos conferidos na branch main.
-- [ ] Campo fl_fiado_autorizado incluído no SQL, modelo lógico e dicionário de dados, ou registrado claramente como melhoria pendente.
+- [ ] Autorização de fiado implementada com cliente.fl_bloqueado e sp_autorizar_cliente_fiado (SQL, modelo lógico e dicionário de dados conferidos).
 - [ ] Limitações da relação PRODUTO–`ESTOQUE`, da baixa de estoque por venda, do vínculo de lote na venda e do controle de vencimento do fiado documentadas.
 - [ ] Registro efetivo de eventos em LOG_ACESSO conferido; a tabela, sozinha, não garante a gravação automática dos eventos.
