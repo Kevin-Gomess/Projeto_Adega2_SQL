@@ -437,9 +437,9 @@ Cada problema e cada KPI com as tabelas que o sustentam e a consulta do script q
 ## 2. Modelo Lógico Relacional
 
 - **SGBD:** MySQL 8.0.16 ou superior (os `CHECK` só são aplicados a partir dessa versão).
-- **Software em que o modelo lógico foi criado:** brModelo [PREENCHER VERSÃO].
-- **Arquivo editável do brModelo:** `diagramas/modelo_logico.brm` [SALVAR depois de montar no brModelo; o roteiro com todas as tabelas, colunas, chaves e ligações está em [`diagramas/modelo_logico_brmodelo_passo_a_passo.md`](diagramas/modelo_logico_brmodelo_passo_a_passo.md)].
-- **Imagem do modelo lógico:** [`diagramas/modelo_logico.png`](diagramas/modelo_logico.png) (desenhada a partir do script SQL, com as 21 tabelas).
+- **Software em que o modelo lógico foi criado:** brModelo 3.3 (gerado e salvo com o próprio programa, a partir do `docs/script.sql`).
+- **Arquivo editável do brModelo:** [`diagramas/modelo_logico.brm`](diagramas/modelo_logico.brm) (abre no brModelo 3.x; 21 tabelas e 30 ligações).
+- **Imagem do modelo lógico:** [`diagramas/modelo_logico.png`](diagramas/modelo_logico.png) (exportada na notação do brModelo, com as 21 tabelas).
 - **Modelo lógico em texto:** [`docs/modelo_logico.md`](docs/modelo_logico.md); versão para o dbdiagram.io: [`diagramas/modelo_logico.dbml`](diagramas/modelo_logico.dbml).
 
 ![Modelo lógico da Adega do Tonho](diagramas/modelo_logico.png)
@@ -554,7 +554,7 @@ As quantidades acima vêm da simulação; depois de rodar no MySQL, conferir com
 | :---- | :---- |
 | Relatório Técnico Final | [`README.md`](README.md) |
 | DER conceitual revisado | [`diagramas/der_conceitual`](diagramas/) [PREENCHER arquivo do brModelo]; apoio: [`.png`](diagramas/der_conceitual.png) e [`.md`](diagramas/der_conceitual.md) |
-| Modelo lógico (editável, brModelo) | `diagramas/modelo_logico.brm` [SALVAR do brModelo]; roteiro: [`passo a passo`](diagramas/modelo_logico_brmodelo_passo_a_passo.md) |
+| Modelo lógico (editável, brModelo) | [`diagramas/modelo_logico.brm`](diagramas/modelo_logico.brm) |
 | Modelo lógico (imagem) | [`diagramas/modelo_logico.png`](diagramas/modelo_logico.png) |
 | Modelo lógico (texto) | [`docs/modelo_logico.md`](docs/modelo_logico.md) |
 | Normalização | [`docs/normalizacao.md`](docs/normalizacao.md) |
