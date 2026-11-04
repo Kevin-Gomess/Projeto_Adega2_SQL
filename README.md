@@ -2,7 +2,7 @@
 
 ### Modelagem de um sistema de gestão de informações para uma organização de pequeno porte
 
-> Relatório Técnico Final do grupo. Este arquivo é o `README.md` da raiz da branch `main` e segue a estrutura do esqueleto da Entrega 2. Os demais artefatos (DER, modelo lógico, dicionário de dados, levantamento, script SQL, massa de dados, consultas e slides) ficam em arquivos separados, com link nas seções abaixo.
+> Relatório Técnico Final do grupo. Este arquivo é o `README.md` da raiz da branch `main` e segue a estrutura do esqueleto da Entrega 2. Os demais artefatos (DER, modelo lógico, dicionário de dados, levantamento, script SQL, massa de dados, consultas ) ficam em arquivos separados, com link nas seções abaixo.
 
 > Pendências marcadas como **[PREENCHER]** ou **[CONFIRMAR]** dependem de informação do responsável pela adega, de prints da execução no MySQL ou de confirmação do grupo, e **não** foram inventadas.
 
@@ -28,7 +28,7 @@
 - **Contexto e porte:**
   - Tempo de funcionamento: cerca de 4 anos.
   - Pessoas envolvidas: 3 a 4 pessoas por dia.
-  - Horário: segunda a quinta, das 13h às 23h; sexta a domingo, das 13h à meia-noite.
+  - Horário: segunda a quinta, das 13h00 às 23h00; sexta a domingo, das 13h00.
   - Produtos: refrigerantes, cervejas, bebidas alcoólicas, doces, salgadinhos, sucos, itens de mercearia, produtos para narguilé, cigarros e isqueiros. Algumas bebidas também são vendidas em doses.
   - Estrutura física: a frente é usada para atendimento e exposição; os fundos são o estoque.
   - **Números ainda não confirmados com o responsável** (não são apresentados como dado levantado):
