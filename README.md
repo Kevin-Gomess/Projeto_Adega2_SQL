@@ -28,7 +28,7 @@
 - **Contexto e porte:**
   - Tempo de funcionamento: cerca de 4 anos.
   - Pessoas envolvidas: 3 a 4 pessoas por dia.
-  - Horário: segunda a quinta, das 13h00 às 23h00; sexta a domingo, das 13h00.
+  - Horário: segunda a quinta, das 13h00 às 23h00; sexta a domingo, das 13h00 às 00h00.
   - Produtos: refrigerantes, cervejas, bebidas alcoólicas, doces, salgadinhos, sucos, itens de mercearia, produtos para narguilé, cigarros e isqueiros. Algumas bebidas também são vendidas em doses.
   - Estrutura física: a frente é usada para atendimento e exposição; os fundos são o estoque.
   - **Números ainda não confirmados com o responsável** (não são apresentados como dado levantado):
