@@ -59,18 +59,18 @@
   O modelo conceitual possui 18 entidades de negócio. Na implementação lógica há 21 tabelas: as 18 entidades mais três tabelas de apoio criadas na implementação: `log_acesso` (auditoria), `garrafa_aberta` (volume restante das garrafas abertas para dose) e `movimentacao_caixa` (suprimentos, sangrias e despesas do caixa).
 - **Justificativa da escolha:** a Adega do Tonho é uma organização real, de pequeno porte, com vendas, compras, pagamentos, controle de estoque e fiado. Um dos integrantes tem vínculo de trabalho com a adega e acompanha parte da rotina; esse vínculo facilitou o levantamento, mas **não dispensa a entrevista com o responsável no local** (ver o relato abaixo).
 - **Evidências da organização** (arquivos JPG ou PNG dentro de [`evidencias/`](evidencias/)):
-  - Endereço completo: [PREENCHER].
+  - Endereço completo: R. Joaquim Meira de Siqueira, 772 - Jardim Nossa Sra. do Carmo, São Paulo - SP, 08275-490
   - Perfil no Google Meu Negócio (Google Business Profile): [PREENCHER LINK].
-  - Site ou rede social: [PREENCHER, se houver].
-  - Fotos do local e da visita: [INFORMAR NOMES DOS ARQUIVOS JPG OU PNG].
+  - Site ou rede social: Não tem.
+  - Fotos do local e da visita: fundo.jpeg, fundo.estoque.jpeg, fundo.estoque2.jpeg, fundo.estoque3.jpeg, balcao1.jpeg, balcao2.jpe, balcao3.jpeg, frente.jpeg.
 - **Responsável pela organização:**
-  - Nome: [PREENCHER].
-  - Função: [PREENCHER].
+  - Nome: Eric .
+  - Função: Dono .
   - Telefone para contato: [PREENCHER, somente com autorização do responsável].
 
 **Relato da entrevista**
 
-- **Quem:** entrevistado [PREENCHER NOME E FUNÇÃO]; integrantes participantes [PREENCHER].
+- **Quem:** entrevistado Kevin, funcionario e gerente ; integrantes participantes Gabriel.
 - **Quando e onde:** data [PREENCHER]; local: Adega do Tonho, no próprio estabelecimento.
 - **Comprovação:** ao menos uma foto da entrevista no local, em JPG ou PNG, na pasta [`evidencias/`](evidencias/) [INFORMAR NOME DO ARQUIVO].
 - **O que foi levantado:** o levantamento completo, escrito pelo grupo, está em [`levantamento/levantamento.md`](levantamento/levantamento.md). Resumo:
