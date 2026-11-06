@@ -1,6 +1,6 @@
 # Indicadores, BI e IA — Adega do Tonho
 
-Este arquivo mostra o que o banco consegue responder para quem toma decisão na adega. Todo indicador abaixo tem uma consulta pronta no [`consultas.sql`](consultas.sql) (código G). Os números de exemplo vêm da **massa de dados fictícia** (03/08/2026 a 01/11/2026, data de referência `@hoje = '2026-11-01'`), então servem para mostrar como a consulta funciona, não para dizer como a adega real está.
+Este arquivo mostra o que o banco consegue responder para quem toma decisão na adega. Os números de exemplo vêm da **massa de dados fictícia** (03/08/2026 a 01/11/2026, data de referência `@hoje = '2026-11-01'`), então servem para mostrar como a consulta funciona, não para dizer como a adega real está.
 
 ## 1. Informações estratégicas que o banco entrega
 
