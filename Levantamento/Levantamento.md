@@ -12,7 +12,14 @@ A Adega do Tonho é um comércio de bairro de pequeno porte, com fins lucrativos
 - Estrutura: a parte da frente é para atendimento e exposição; os fundos são o estoque.
 - Também há bebidas vendidas em doses.
 
-Os números aproximados (produtos cadastrados, vendas por dia, clientes do fiado e compras por mês) estão na seção 1.1 (Caracterização da organização) do [`README.md`](../README.md) e **ainda precisam ser confirmados com o responsável**.
+Números aproximados informados ao grupo (ainda a **confirmar com o responsável**):
+
+- Produtos cadastrados: entre 100 e 300.
+- Vendas por dia: de 10 a 20 de terça a quinta; de sexta a domingo passa de 25 com facilidade (segunda não foi informada).
+- Clientes que compram no fiado: cerca de 30 pessoas.
+- Compras com fornecedores: de 3 a 5 vezes por semana.
+
+Eles justificam o volume da massa de dados (seção 4 do [`README.md`](../README.md)).
 
 ## Problemas identificados
 
