@@ -2,7 +2,7 @@
 
 ### Modelagem de um sistema de gestão de informações para uma organização de pequeno porte
 
-> Relatório Técnico Final do grupo. Este arquivo é o `README.md` da raiz da branch `main` e segue a estrutura do esqueleto da Entrega 2. Os demais artefatos (DER, modelo lógico, dicionário de dados, levantamento, script SQL, massa de dados, consultas ) ficam em arquivos separados, com link nas seções abaixo.
+> Relatório Técnico Final do grupo. Este arquivo é o `README.md` da raiz da branch `main` e segue a estrutura do esqueleto da Entrega 2. Os demais artefatos (DER, modelo lógico, dicionário de dados, levantamento, script SQL, massa de dados, consultas e slides) ficam em arquivos separados, com link nas seções abaixo.
 
 > Pendências marcadas como **[PREENCHER]** ou **[CONFIRMAR]** dependem de informação do responsável pela adega, de prints da execução no MySQL ou de confirmação do grupo, e **não** foram inventadas.
 
@@ -28,14 +28,14 @@
 - **Contexto e porte:**
   - Tempo de funcionamento: cerca de 4 anos.
   - Pessoas envolvidas: 3 a 4 pessoas por dia.
-  - Horário: segunda a quinta, das 13h00 às 23h00; sexta a domingo, das 13h00 às 00h00.
+  - Horário: segunda a quinta, das 13h às 23h; sexta a domingo, das 13h à meia-noite.
   - Produtos: refrigerantes, cervejas, bebidas alcoólicas, doces, salgadinhos, sucos, itens de mercearia, produtos para narguilé, cigarros e isqueiros. Algumas bebidas também são vendidas em doses.
   - Estrutura física: a frente é usada para atendimento e exposição; os fundos são o estoque.
-  - **Números ainda não confirmados com o responsável** (não são apresentados como dado levantado):
-    - Quantidade aproximada de produtos cadastrados: [PREENCHER após confirmação].
-    - Média aproximada de vendas por dia ou por semana: [PREENCHER após confirmação].
-    - Quantidade aproximada de clientes autorizados a comprar no fiado: [PREENCHER após confirmação].
-    - Quantidade aproximada de compras com fornecedores por mês: [PREENCHER após confirmação].
+  - **Números aproximados informados ao grupo** (por ora sem a confirmação formal do responsável na entrevista; [CONFIRMAR]):
+    - Quantidade aproximada de produtos cadastrados: entre 100 e 300.
+    - Média aproximada de vendas por dia: de 10 a 20 vendas por dia de terça a quinta; de sexta a domingo passa de 25 vendas por dia com facilidade. (Segunda-feira não foi informada.)
+    - Quantidade aproximada de clientes autorizados a comprar no fiado: cerca de 30 pessoas.
+    - Quantidade aproximada de compras com fornecedores: de 3 a 5 vezes por semana.
 - **Problemas e necessidades identificados:** a crise operacional é que vendas comuns, estoque e fiado são controlados em caderno e no celular. Cada problema precisa aparecer no DER e ter ao menos uma consulta gerencial (ver a tabela de rastreabilidade na seção 1.6).
 
 | Código | Problema identificado | Como o sistema poderá ajudar |
@@ -112,10 +112,10 @@ Processos detalhados e fluxogramas: [`levantamento/processos.md`](levantamento/p
 
 | Processo provável | Justificativa |
 | :---- | :---- |
-| Entrega em domicílio | Não foi identificada no levantamento da Entrega 1. Confirmar com o responsável se a adega realiza esse serviço. |
-| Folha de pagamento | Não faz parte do escopo definido para o sistema de gestão de vendas, estoque, compras e fiado. |
-| Programa de fidelidade | Não foi identificado como processo existente no levantamento. |
-| Emissão de documento fiscal pelo sistema | A emissão não foi definida como funcionalidade do sistema proposto. A necessidade e o procedimento devem ser confirmados com o responsável. |
+| Entrega em domicílio | A adega não faz entrega e nem pretende fazer. |
+| Folha de pagamento | Ainda não existe na adega; por isso ficou fora do sistema. |
+| Programa de fidelidade | A adega não tem. |
+| Emissão de documento fiscal pelo sistema | Não entrou como função do sistema proposto, mas a adega vai precisar quando tiver um sistema. Por enquanto o banco só guarda o número do documento. |
 
 **Requisitos**
 
@@ -170,11 +170,11 @@ Levantamento completo: [`levantamento/Requisitos.md`](levantamento/Requisitos.md
 
 | Requisito provável | Justificativa |
 | :---- | :---- |
-| Emissão de nota fiscal eletrônica pelo sistema | Não foi definida como funcionalidade; o banco só guarda o número do documento fiscal (`nr_documento_fiscal`, `nr_nota_fiscal`). Confirmar com o responsável como a adega emite. |
-| Venda por entrega/delivery | Não foi identificada no levantamento da Entrega 1. [CONFIRMAR com o responsável.] |
-| Programa de fidelidade e cupons | Não existe na adega. |
+| Emissão de nota fiscal eletrônica pelo sistema | Não entrou como função agora; o banco só guarda o número do documento fiscal (`nr_documento_fiscal`, `nr_nota_fiscal`). A adega vai precisar quando tiver um sistema. |
+| Venda por entrega (delivery) | A adega não faz entrega e nem pretende fazer. |
+| Programa de fidelidade e cupons | A adega não tem. |
 | Integração com a maquininha de cartão | Fora do escopo do banco de dados; o sistema só registra a forma de pagamento. |
-| Previsão de demanda por IA | Registrada na seção 1.6 como possibilidade futura; depende de histórico real. |
+| Previsão de demanda por IA | Fica como ideia futura (seção 1.6), porque depende de histórico real da adega. |
 
 **Regras de negócio**
 
@@ -217,10 +217,10 @@ Regras completas: [`levantamento/regras_de_negocio.md`](levantamento/regras_de_n
 
 | Regra provável | Justificativa |
 | :---- | :---- |
-| Horário limite para venda de bebida alcoólica | Depende de lei do município; não foi levantada. [CONFIRMAR com o responsável.] |
-| Política de troca e devolução ao cliente | Não foi identificada no levantamento. |
-| Promoções e descontos por quantidade | Só existe desconto simples na venda (`venda.vl_desconto`); regras de promoção não foram levantadas. |
-| Comissão de funcionários | Fora do escopo (sem folha de pagamento). |
+| Horário limite para venda de bebida alcoólica | Depende da lei do município; na adega não existe horário limite para isso. |
+| Política de troca e devolução ao cliente | O cliente só precisa chegar com a nota de compra e mostrar o defeito. |
+| Promoções e descontos por quantidade | Só existe desconto simples na venda (`venda.vl_desconto`); promoção só em época de festa. |
+| Comissão de funcionários | Não tem comissão; só no fim do ano os funcionários ganham uma caixinha pelo ano trabalhado. |
 
 **Notação do DER conceitual**
 
@@ -396,18 +396,18 @@ Justificativas completas: [`docs/justificativa_tecnica.md`](docs/justificativa_t
 Documento completo: [`docs/indicadores_kpis.md`](docs/indicadores_kpis.md).
 
 - **Informações estratégicas:** produtos e categorias que mais saem, e em quais dias e horários; faturamento por período e por forma de pagamento; produtos no mínimo ou abaixo; valores pendentes de fiado e quem está em atraso; compras por fornecedor; produtos perto do vencimento; perdas e quebras; diferenças no fechamento do caixa.
-- **Indicadores e métricas gerenciais (KPIs).** As metas não foram informadas pelo responsável, então ficam como *não definidas* (não inventamos meta):
+- **Indicadores e métricas gerenciais (KPIs).** A meta de faturamento é a do dono, R$ 5.000 por mês; as demais metas de referência foram definidas por nós para uma adega pequena, olhando o ritmo de vendas que ele informou e a meta de faturamento de R$ 5.000 por mês (alguns meses a adega fica bem abaixo disso). São sugestões do grupo, para o gerente ajustar:
 
 | Código | KPI | Fórmula | Período | Meta |
 | :---- | :---- | :---- | :---- | :---- |
-| KPI01 | Faturamento | soma de `venda.vl_total` das vendas CONCLUIDA | dia, mês | Não definida |
-| KPI02 | Ticket médio | faturamento ÷ número de vendas concluídas | mês | Não definida |
-| KPI03 | Produtos mais vendidos | receita e quantidade de `item_venda` por produto | mês | Não definida |
-| KPI04 | Produtos no mínimo ou abaixo | produtos com `qt_atual <= qt_minima` | diário | Não definida |
-| KPI05 | Saldo de fiado em aberto | soma de (`vl_total` − `vl_pago`) dos fiados ABERTO | semanal | Não definida |
-| KPI06 | Fiado vencido | fiados ABERTO com `dt_vencimento` anterior a hoje | semanal | Não definida |
-| KPI07 | Perdas e quebras | quantidade e valor das movimentações PERDA | mês | Não definida |
-| KPI08 | Diferença de caixa | soma de `caixa.vl_diferenca` dos caixas FECHADO | dia, mês | Não definida |
+| KPI01 | Faturamento | soma de `venda.vl_total` das vendas CONCLUIDA | dia, mês | R$ 5.000 por mês; terça a quinta cerca de R$ 100 por dia; sexta a domingo mais de R$ 150 por dia |
+| KPI02 | Ticket médio | faturamento ÷ número de vendas concluídas | mês | R$ 8 ou mais por venda (R$ 5.000 por mês dividido pelas vendas do mês) |
+| KPI03 | Produtos mais vendidos | receita e quantidade de `item_venda` por produto | mês | os 10 mais vendidos nunca podem faltar na prateleira |
+| KPI04 | Produtos no mínimo ou abaixo | produtos com `qt_atual <= qt_minima` | diário | no máximo 5 produtos no mínimo ou abaixo ao mesmo tempo, e nenhum dos 10 mais vendidos |
+| KPI05 | Saldo de fiado em aberto | soma de (`vl_total` − `vl_pago`) dos fiados ABERTO | semanal | até R$ 500 em aberto (cerca de 10% do faturamento do mês) |
+| KPI06 | Fiado vencido | fiados ABERTO com `dt_vencimento` anterior a hoje | semanal | até R$ 100 vencido e nenhum cliente com mais de 30 dias de atraso |
+| KPI07 | Perdas e quebras | quantidade e valor das movimentações PERDA | mês | perdas de até 1% do faturamento do mês (uns R$ 50) |
+| KPI08 | Diferença de caixa | soma de `caixa.vl_diferenca` dos caixas FECHADO | dia, mês | soma do mês entre -R$ 20 e +R$ 20, e nenhum caixa com diferença acima de R$ 5 |
 
 - **Potencial dos dados para BI:** as tabelas de movimento (`venda`, `item_venda`, `pagamento`, `movimentacao_estoque`, `movimentacao_caixa`, `fiado`, `compra`, `caixa`) ligadas às de cadastro (`produto`, `categoria`, `funcionario`, `cliente`, `fornecedor`) alimentam painéis de vendas, estoque, fiado, caixa e compras. Cada consulta gerencial (G) vira um gráfico ou tabela de painel, e as consultas de auditoria (A) viram um painel de qualidade dos dados.
 - **Aplicações analíticas e de IA:** nenhuma foi implementada neste trabalho; o banco não faz previsão sozinho. Possibilidades futuras, com histórico **real**: previsão de reposição de cada produto, previsão de dias e horários de pico para a escala, sugestão de limite de fiado pelo histórico de pagamento e alerta de produto parado. Treinar um modelo na massa fictícia só ensinaria as regras do gerador, não o comportamento da adega.
@@ -499,16 +499,27 @@ Arquivo: [`docs/massa_de_dados.sql`](docs/massa_de_dados.sql). Rodar depois do `
 
 **Justificativa do volume de dados**
 
-A massa simula cerca de 3 meses de funcionamento, com 4 funcionários, 60 produtos, 5 fornecedores e 12 clientes, coerente com uma equipe de 3 a 4 pessoas, funcionamento diário e a variedade de produtos. Os números reais da adega (produtos, vendas por dia, clientes no fiado, compras por mês) ainda **não foram confirmados** com o responsável (seção 1.1); por isso o volume é uma estimativa do grupo e deve ser ajustado quando eles chegarem.
+A massa simula cerca de 3 meses de funcionamento (03/08/2026 a 01/11/2026) com 4 funcionários, 105 produtos, 5 fornecedores e 30 clientes cadastrados no fiado. O volume segue os números informados (seção 1.1):
+
+| Número informado | Como a massa o reflete |
+| :---- | :---- |
+| 100 a 300 produtos | 105 produtos (o piso da faixa, para a massa não ficar inflada) |
+| 10 a 20 vendas por dia de terça a quinta | 10 a 20 vendas por dia de terça a quinta (média de cerca de 14 a 15) |
+| Mais de 25 vendas por dia de sexta a domingo | 25 a 38 vendas por dia de sexta a domingo (média de cerca de 27 a 31) |
+| Cerca de 30 clientes no fiado | 30 clientes cadastrados; 101 fiados no período |
+| Compras de 3 a 5 vezes por semana | 1 pedido por semana a cada um dos 5 fornecedores (68 compras em 13 semanas, cerca de 5 por semana) |
+
+A segunda-feira não foi informada; a massa usa de 8 a 14 vendas. Esses números ainda precisam da confirmação do responsável e, se mudarem, o volume deve ser ajustado.
 
 **Variedade dos dados**
 
-- Produtos de 8 categorias, com e sem venda em dose (5 vendidos em dose);
+- Produtos de 8 categorias, com e sem venda em dose (6 vendidos em dose);
 - produtos com estoque acima do mínimo, no mínimo e abaixo dele;
 - vendas com formas de pagamento diferentes e pagamento dividido;
-- vendas canceladas (7) e descontos;
-- clientes bloqueados e autorizados no fiado, com fiado em aberto, vencido e quitado, e recebimentos parciais;
+- vendas canceladas (31) e descontos;
+- clientes bloqueados (4) e autorizados no fiado, com fiado em aberto, vencido e quitado, e recebimentos parciais;
 - compras de 5 fornecedores, com recebimento parcial (divergência) e uma compra cancelada;
+- clientes que nunca usaram o fiado (2 dos 30);
 - lotes com validades diferentes, inclusive vencidos;
 - movimentações de entrada, saída de venda, saída de dose, perda, ajuste e devolução ao fornecedor;
 - caixas com fechamento certo, com sobra e com falta, e suprimentos, sangrias e despesas;
@@ -519,26 +530,26 @@ A massa simula cerca de 3 meses de funcionamento, com 4 funcionários, 60 produt
 | Tabela | Quantidade | Justificativa pelo volume e pelas regras |
 | :---- | :---- | :---- |
 | categoria | 8 | Categorias dos produtos comercializados. |
-| produto | 60 | Variedade de produtos da adega, 5 deles vendidos também em dose. |
-| estoque | 60 | Um registro de estoque por produto, criado pelo trigger. |
+| produto | 105 | Variedade de produtos (faixa informada: 100 a 300), 6 deles também vendidos em dose. |
+| estoque | 105 | Um registro de estoque por produto, criado pelo trigger. |
 | funcionario | 4 | Equipe de 4 pessoas (1 gerente e 3 atendentes). |
 | escala | 208 | Turnos de 13h às 23h (meia-noite de sexta a domingo) nos 91 dias. |
 | caixa | 91 | Um caixa por dia; o último fica aberto. |
-| cliente | 12 | Clientes fictícios, 2 bloqueados por fiado vencido. |
-| venda | 650 | Vendas fictícias (643 concluídas e 7 canceladas) em 3 meses. |
-| item_venda | 1198 | Itens das vendas, em unidade e em dose. |
-| pagamento | 749 | Pagamentos (inclui a parte FIADO lançada pela procedure). |
-| fiado | 43 | Fiados abertos e quitados. |
-| item_fiado | 90 | Linhas de venda alocadas ao fiado pela procedure. |
-| pagamento_fiado | 44 | Recebimentos totais e parciais. |
+| cliente | 30 | Cerca de 30 clientes no fiado (número informado); 4 bloqueados. |
+| venda | 1858 | Vendas fictícias (1.827 concluídas e 31 canceladas) em 3 meses, no ritmo informado por dia da semana. |
+| item_venda | 3405 | Itens das vendas, em unidade e em dose. |
+| pagamento | 2123 | Pagamentos (inclui a parte FIADO lançada pela procedure). |
+| fiado | 101 | Fiados: 25 em aberto e 76 quitados. |
+| item_fiado | 187 | Linhas de venda alocadas ao fiado pela procedure. |
+| pagamento_fiado | 87 | Recebimentos totais e parciais. |
 | fornecedor | 5 | Fornecedores fictícios (CNPJs inventados). |
-| compra | 86 | Pedidos aos 5 fornecedores: 70 recebidos, 15 recebidos parcialmente e 1 cancelado. |
-| item_compra | 329 | Produtos e quantidades das compras. |
-| lote | 275 | Lotes com validades diferentes, inclusive vencidos. |
-| movimentacao_estoque | 1593 | Entradas, saídas de venda e de dose, perdas, ajustes e devolução. |
-| garrafa_aberta | 6 | Garrafas abertas para vender doses. |
-| movimentacao_caixa | 67 | Suprimentos, sangrias e despesas do caixa. |
-| log_acesso | 672 | Logins, alterações e aprovações registradas pelos triggers e procedures. |
+| compra | 68 | Pedidos aos 5 fornecedores, cerca de 5 por semana: 46 recebidos, 21 recebidos parcialmente e 1 cancelado. |
+| item_compra | 635 | Produtos e quantidades das compras. |
+| lote | 477 | Lotes com validades diferentes, inclusive vencidos. |
+| movimentacao_estoque | 4141 | Entradas, saídas de venda e de dose, perdas, ajustes e devolução. |
+| garrafa_aberta | 14 | Garrafas abertas para vender doses. |
+| movimentacao_caixa | 70 | Suprimentos, sangrias e despesas do caixa. |
+| log_acesso | 936 | Logins, alterações e aprovações registradas pelos triggers e procedures. |
 
 As quantidades acima vêm da simulação; depois de rodar no MySQL, conferir com `SELECT COUNT(*)` em cada tabela.
 
