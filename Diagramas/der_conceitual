@@ -4,7 +4,7 @@
 ## Diagrama
 
 ```mermaid
-erDiagram
+
     CATEGORIA ||--o{ PRODUTO : "classifica"
     PRODUTO ||--|| ESTOQUE : "possui"
     PRODUTO ||--o{ MOVIMENTACAO_ESTOQUE : "é movimentado em"
