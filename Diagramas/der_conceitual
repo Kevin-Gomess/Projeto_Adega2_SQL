@@ -1,15 +1,5 @@
 # DER da Adega (modelo conceitual)
 
-Versão 1.2, 09/11/2026. Este arquivo substitui o antigo `DER.adega.png`. A imagem `der_conceitual.png` é a versão em figura deste mesmo diagrama e deve ser gerada de novo sempre que o diagrama mudar.
-
-O diagrama abaixo é desenhado pelo próprio GitHub (Mermaid), então não depende de imagem externa. Para exportar em PNG ou PDF, cole o bloco em https://mermaid.live. O modelo lógico, com chaves estrangeiras, está em `modelo_logico.dbml` (abrir em https://dbdiagram.io/d) e em `../docs/script.sql`.
-
-## Como ler o diagrama
-
-- O DER usa a notação pé de galinha. Cada ponta do traço mostra **mínimo e máximo**: `||` exatamente um, `|o` zero ou um, `}o` zero ou muitos, `}|` um ou muitos.
-- O símbolo ao lado de uma entidade diz **quantas ocorrências dela** se ligam a uma ocorrência da outra. Ex.: `CATEGORIA ||--o{ PRODUTO` significa que cada produto tem exatamente 1 categoria e cada categoria tem 0 a N produtos.
-- **Não há chaves estrangeiras** no desenho: elas só aparecem no modelo lógico. Cada entidade marca seu identificador (`PK`) e os atributos únicos (`UK`).
-- `LOG_ACESSO` (auditoria), `GARRAFA_ABERTA` (volume restante das garrafas abertas para dose) e `MOVIMENTACAO_CAIXA` (suprimentos, sangrias e despesas) são tabelas de apoio criadas na implementação. Ficam fora do DER conceitual, que tem 18 entidades, mas existem no modelo lógico (21 tabelas).
 
 ## Diagrama
 
