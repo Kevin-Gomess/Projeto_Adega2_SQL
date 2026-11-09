@@ -15,10 +15,10 @@
 | Nome completo do aluno | RGM | Usuário do GitHub |
 | :---- | :---- | :---- |
 | Kevin Gomes | 47796006 | [PREENCHER] |
-| Brayan Antonio Daza Paredes | 50184857 | [PREENCHER] |
-| Gabriel dos Santos Eufrasio | 49005260 | [PREENCHER] |
-| Gabriel Gonçalves Moura | 48892009 | [PREENCHER] |
-| Felipe Militão | 49331108 | [PREENCHER] |
+| Brayan Antonio Daza Paredes | 50184857 | BrayanDaza-P26 |
+| Gabriel dos Santos Eufrasio | 49005260 | Gabriel-dos-Santos-eufrasio- |
+| Gabriel Gonçalves Moura | 48892009 | Gabrielmouramurillo-RGB |
+| Felipe Militão | 49331108 | felipemilitao2007-rgb |
 
 ### 1.1 Revisão do Modelo Conceitual
 
