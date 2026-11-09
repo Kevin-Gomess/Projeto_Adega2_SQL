@@ -31,7 +31,6 @@
   - Horário: segunda a quinta, das 13h às 23h; sexta a domingo, das 13h à meia-noite.
   - Produtos: refrigerantes, cervejas, bebidas alcoólicas, doces, salgadinhos, sucos, itens de mercearia, produtos para narguilé, cigarros e isqueiros. Algumas bebidas também são vendidas em doses.
   - Estrutura física: a frente é usada para atendimento e exposição; os fundos são o estoque.
-  - **Números aproximados informados ao grupo** (por ora sem a confirmação formal do responsável na entrevista; [CONFIRMAR]):
     - Quantidade aproximada de produtos cadastrados: entre 100 e 300.
     - Média aproximada de vendas por dia: de 10 a 20 vendas por dia de terça a quinta; de sexta a domingo passa de 25 vendas por dia com facilidade. 
     - Quantidade aproximada de clientes autorizados a comprar no fiado: cerca de 30 pessoas.
