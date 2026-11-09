@@ -14,7 +14,7 @@
 
 | Nome completo do aluno | RGM | Usuário do GitHub |
 | :---- | :---- | :---- |
-| Kevin Gomes | 47796006 | [PREENCHER] |
+| Kevin Gomes | 47796006 | Kevin-Gomess |
 | Brayan Antonio Daza Paredes | 50184857 | BrayanDaza-P26 |
 | Gabriel dos Santos Eufrasio | 49005260 | Gabriel-dos-Santos-eufrasio- |
 | Gabriel Gonçalves Moura | 48892009 | Gabrielmouramurillo-RGB |
