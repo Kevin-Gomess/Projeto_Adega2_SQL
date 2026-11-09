@@ -1,6 +1,6 @@
 # DER da Adega (modelo conceitual)
 
-Versão 1.1, 29/10/2026. Este arquivo substitui o antigo `DER.adega.png`. A imagem `der_conceitual.png` é a versão em figura deste mesmo diagrama e deve ser gerada de novo sempre que o diagrama mudar.
+Versão 1.2, 09/11/2026. Este arquivo substitui o antigo `DER.adega.png`. A imagem `der_conceitual.png` é a versão em figura deste mesmo diagrama e deve ser gerada de novo sempre que o diagrama mudar.
 
 O diagrama abaixo é desenhado pelo próprio GitHub (Mermaid), então não depende de imagem externa. Para exportar em PNG ou PDF, cole o bloco em https://mermaid.live. O modelo lógico, com chaves estrangeiras, está em `modelo_logico.dbml` (abrir em https://dbdiagram.io/d) e em `../docs/script.sql`.
 
@@ -9,7 +9,7 @@ O diagrama abaixo é desenhado pelo próprio GitHub (Mermaid), então não depen
 - O DER usa a notação pé de galinha. Cada ponta do traço mostra **mínimo e máximo**: `||` exatamente um, `|o` zero ou um, `}o` zero ou muitos, `}|` um ou muitos.
 - O símbolo ao lado de uma entidade diz **quantas ocorrências dela** se ligam a uma ocorrência da outra. Ex.: `CATEGORIA ||--o{ PRODUTO` significa que cada produto tem exatamente 1 categoria e cada categoria tem 0 a N produtos.
 - **Não há chaves estrangeiras** no desenho: elas só aparecem no modelo lógico. Cada entidade marca seu identificador (`PK`) e os atributos únicos (`UK`).
-- `LOG_ACESSO` é tabela de apoio (auditoria) e fica fora do DER conceitual.
+- `LOG_ACESSO` (auditoria), `GARRAFA_ABERTA` (volume restante das garrafas abertas para dose) e `MOVIMENTACAO_CAIXA` (suprimentos, sangrias e despesas) são tabelas de apoio criadas na implementação. Ficam fora do DER conceitual, que tem 18 entidades, mas existem no modelo lógico (21 tabelas).
 
 ## Diagrama
 
@@ -37,6 +37,7 @@ erDiagram
     FUNCIONARIO ||--o{ COMPRA : "realiza"
     COMPRA ||--|{ ITEM_COMPRA : "contém"
     PRODUTO ||--o{ ITEM_COMPRA : "é comprado em"
+    LOTE |o--o{ ITEM_VENDA : "é vendido de"
 
     CATEGORIA {
         int id_categoria PK
@@ -48,6 +49,7 @@ erDiagram
         string cd_barras UK
         string nm_produto
         decimal vl_venda
+        bool fl_controla_validade
         bool fl_vende_dose
         int qt_ml_garrafa
         int qt_ml_dose
@@ -132,6 +134,7 @@ erDiagram
     }
     ITEM_FIADO {
         int id_item_fiado PK
+        decimal vl_fiado
         datetime dt_lancamento
     }
     PAGAMENTO_FIADO {
@@ -208,10 +211,11 @@ Notação (mín,máx) ao lado de cada entidade: quantas vezes uma ocorrência de
 | 20 | FUNCIONARIO | (0,N) | realiza | (1,1) | COMPRA | `compra.id_funcionario` |
 | 21 | COMPRA | (1,N) | contém | (1,1) | ITEM_COMPRA | `item_compra.id_compra` |
 | 22 | PRODUTO | (0,N) | é comprado em | (1,1) | ITEM_COMPRA | `item_compra.id_produto` |
+| 23 | LOTE | (0,N) | é vendido de | (0,1) | ITEM_VENDA | `item_venda.id_lote` (obrigatório só para produto com controle de validade) |
 
 ## O que foi corrigido em relação ao DER anterior
 
-- **Cardinalidade mínima e máxima** em todos os 22 relacionamentos (antes só havia 1 e N).
+- **Cardinalidade mínima e máxima** em todos os 23 relacionamentos (antes só havia 1 e N).
 - **Sem chaves estrangeiras** no modelo conceitual, e **identificador (PK) marcado** em todas as entidades.
 - **ESTOQUE** agora liga a **PRODUTO** (1:1), não a VENDA. A venda reduz o estoque por meio de ITEM_VENDA e MOVIMENTACAO_ESTOQUE, como a justificativa técnica já defendia.
 - **VENDA e PAGAMENTO** têm **um só** relacionamento (1 venda tem 1 a N pagamentos, o que cobre o pagamento dividido).
@@ -219,6 +223,7 @@ Notação (mín,máx) ao lado de cada entidade: quantas vezes uma ocorrência de
 - Entidades desejáveis incluídas: **CAIXA** (abertura e fechamento), **LOTE** (validade) e **ESCALA** (turnos).
 - **FIADO** passou a nascer de uma única **VENDA**, e cada **ITEM_FIADO** aponta para a linha de **ITEM_VENDA** de onde veio (relacionamentos 17 e 18). Produto, quantidade e preço não são copiados: ficam só em ITEM_VENDA.
 - **LOTE**: um **ITEM_COMPRA** pode originar vários lotes, porque a mesma entrega pode trazer validades diferentes (relacionamento 6, sem UNIQUE).
+- **Ajuste de 09/11/2026** para bater com o `script.sql`: incluídos `fl_controla_validade` (PRODUTO), `vl_fiado` (ITEM_FIADO) e o relacionamento 23 entre LOTE e ITEM_VENDA (`item_venda.id_lote`), que existia no script e faltava no DER.
 - Modelo desenhado em Mermaid (texto), sem aparência de imagem gerada, e versionado junto do código.
 
 ## Regra para pagamento dividido e fiado
@@ -247,6 +252,7 @@ Item comercializado: bebida, cigarro, petisco ou conveniência. Pode ser vendido
 | cd_barras | Código de barras (EAN-8, EAN-13 ou EAN-14) lido no balcão | único |
 | nm_produto | Nome comercial com a medida |  |
 | vl_venda | Preço de venda da unidade fechada |  |
+| fl_controla_validade | Indica se o produto exige controle por lote e validade |  |
 | fl_vende_dose | Indica se o produto também é vendido em doses |  |
 | qt_ml_garrafa | Volume da garrafa em mililitros |  |
 | qt_ml_dose | Volume de uma dose em mililitros |  |
@@ -381,6 +387,7 @@ Marca a linha da venda original destinada integralmente ao fiado. Produto, quant
 | Atributo | Descrição | Identificador |
 |---|---|---|
 | id_item_fiado | Identificador do item do fiado | PK |
+| vl_fiado | Valor da linha que foi lançado no fiado |  |
 | dt_lancamento | Data e hora do lançamento |  |
 
 ### PAGAMENTO_FIADO
