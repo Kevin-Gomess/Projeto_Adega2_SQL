@@ -228,10 +228,12 @@ Regras completas: [`levantamento/regras_de_negocio.md`](levantamento/regras_de_n
 
 **Caso A — mesma organização da Entrega 1**
 
-DER conceitual revisado:
+### DER conceitual revisado
 
-- Arquivo do brModelo: [`diagramas/der_conceitual`](diagramas/) [PREENCHER nome e extensão do arquivo exportado do brModelo].
-- Versão de apoio: [`diagramas/der_conceitual.png`](diagramas/der_conceitual.png) e [`diagramas/der_conceitual.md`](diagramas/der_conceitual.md) (desenhadas fora do brModelo, só para consulta; o DER oficial é o do brModelo).
+- **Arquivo oficial do brModelo:** [`Diagramas/der_conceitual`](Diagramas/der_conceitual).
+- **Modelo lógico:** [`Diagramas/modelo_logico.brm`](Diagramas/modelo_logico.brm).
+
+O DER conceitual oficial foi desenvolvido no brModelo. O modelo lógico apresenta a estrutura das entidades, atributos e relacionamentos utilizados na implementação do banco de dados.
 
 As **18 entidades de negócio** do DER revisado:
 
