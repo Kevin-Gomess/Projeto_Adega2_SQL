@@ -252,7 +252,6 @@ Para cada apontamento da correção da Entrega 1, o que foi feito:
 | Não existia representação de caixa. | Inclusão da entidade CAIXA. | Permitir representar as operações de caixa previstas no sistema. |
 | Processos de negócio estavam incompletos. | Ampliação do modelo para contemplar recebimento de fiado, caixa, perdas, validade e escala. | Aumentar a cobertura dos processos da organização. |
 
-*Nenhum apontamento foi mantido sem alteração. [CONFERIR com a correção recebida se algum apontamento ficou de fora desta tabela.]*
 
 ### 1.2 Conversão do Modelo Conceitual para o Modelo Lógico
 
