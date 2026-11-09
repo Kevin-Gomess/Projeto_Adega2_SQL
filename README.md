@@ -33,7 +33,7 @@
   - Estrutura física: a frente é usada para atendimento e exposição; os fundos são o estoque.
   - **Números aproximados informados ao grupo** (por ora sem a confirmação formal do responsável na entrevista; [CONFIRMAR]):
     - Quantidade aproximada de produtos cadastrados: entre 100 e 300.
-    - Média aproximada de vendas por dia: de 10 a 20 vendas por dia de terça a quinta; de sexta a domingo passa de 25 vendas por dia com facilidade. (Segunda-feira não foi informada.)
+    - Média aproximada de vendas por dia: de 10 a 20 vendas por dia de terça a quinta; de sexta a domingo passa de 25 vendas por dia com facilidade. 
     - Quantidade aproximada de clientes autorizados a comprar no fiado: cerca de 30 pessoas.
     - Quantidade aproximada de compras com fornecedores: de 3 a 5 vezes por semana.
 - **Problemas e necessidades identificados:** a crise operacional é que vendas comuns, estoque e fiado são controlados em caderno e no celular. Cada problema precisa aparecer no DER e ter ao menos uma consulta gerencial (ver a tabela de rastreabilidade na seção 1.6).
@@ -66,13 +66,13 @@
 - **Responsável pela organização:**
   - Nome: Eric .
   - Função: Dono .
-  - Telefone para contato: [PREENCHER, somente com autorização do responsável].
+  - Telefone para contato: [Não autorizado].
 
 **Relato da entrevista**
 
 - **Quem:** entrevistado Kevin, funcionario e gerente ; integrantes participantes Gabriel.
 - **Quando e onde:** data [PREENCHER]; local: Adega do Tonho, no próprio estabelecimento.
-- **Comprovação:** ao menos uma foto da entrevista no local, em JPG ou PNG, na pasta [`evidencias/`](evidencias/) [INFORMAR NOME DO ARQUIVO].
+- **Comprovação:** ao menos uma foto da entrevista no local, em JPG ou PNG, na pasta [`evidencias/`](evidencias/) 
 - **O que foi levantado:** o levantamento completo, escrito pelo grupo, está em [`levantamento/levantamento.md`](levantamento/levantamento.md). Resumo:
   - Os preços são consultados em cadernos ou etiquetas.
   - Nas vendas comuns, o produto é entregue após o pagamento, mas não há registro detalhado de cada item vendido.
