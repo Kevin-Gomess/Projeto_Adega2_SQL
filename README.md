@@ -81,8 +81,8 @@
   - Quando uma garrafa é aberta para vender doses, ela deixa de ser vendida como garrafa fechada.
   - Há diferença entre as quantidades anotadas e as encontradas no estoque.
   - O fiado é restrito a clientes conhecidos ou autorizados.
-- **Achados da observação presencial:** a observação mostrou a organização dos produtos (frente e fundos), a consulta de preços, o atendimento, as anotações de compras e a conferência das mercadorias recebidas. [COMPLEMENTAR: separar o que foi observado diretamente do que foi dito pelo responsável.]
-- **O que mudou em relação à Entrega 1:** depois da avaliação, o grupo ampliou a cobertura dos processos com controle de abertura e fechamento de caixa, recebimento e quitação de fiado, validade por lote, perdas e quebras, escalas dos funcionários e registro de ações importantes. Esses itens entraram como **propostas de funcionamento do sistema**: não significa que a adega já os faça hoje. [INFORMAR SE HOUVE NOVA VISITA OU CONFIRMAÇÃO COM O RESPONSÁVEL APÓS A ENTREGA 1.]
+- **Achados da observação presencial:** a observação mostrou a organização dos produtos (frente e fundos), a consulta de preços, o atendimento, as anotações de compras e a conferência das mercadorias recebidas. 
+- **O que mudou em relação à Entrega 1:** depois da avaliação, o grupo ampliou a cobertura dos processos com controle de abertura e fechamento de caixa, recebimento e quitação de fiado, validade por lote, perdas e quebras, escalas dos funcionários e registro de ações importantes. Esses itens entraram como **propostas de funcionamento do sistema**: não significa que a adega já os faça hoje. 
 
 **Nível de detalhe — processos, requisitos e regras de negócio**
 
@@ -439,7 +439,7 @@ Cada problema e cada KPI com as tabelas que o sustentam e a consulta do script q
 - **Software em que o modelo lógico foi criado:** brModelo 3.3 (gerado e salvo com o próprio programa, a partir do `docs/script.sql`).
 - **Arquivo editável do brModelo:** [`diagramas/modelo_logico.brm`](diagramas/modelo_logico.brm) (abre no brModelo 3.x; 21 tabelas e 30 ligações).
 - **Imagem do modelo lógico:** [`diagramas/modelo_logico.png`](diagramas/modelo_logico.png) (exportada na notação do brModelo, com as 21 tabelas).
-- **Modelo lógico em texto:** [`docs/modelo_logico.md`](docs/modelo_logico.md); versão para o dbdiagram.io: [`diagramas/modelo_logico.dbml`](diagramas/modelo_logico.dbml).
+- **Modelo lógico em texto:** [`docs/modelo_logico.md`](docs/modelo_logico.md); 
 
 ![Modelo lógico da Adega do Tonho](diagramas/modelo_logico.png)
 
@@ -454,13 +454,11 @@ O script é o arquivo [`docs/script.sql`](docs/script.sql) (MySQL 8.0.16 ou supe
 **Ordem de execução e arquivos:**
 
 | Ordem | Arquivo | O que faz |
-| :---- | :---- | :---- |
+| :---: | :--- | :--- |
 | 1 | [`docs/script.sql`](docs/script.sql) | `CREATE DATABASE`, `CREATE TABLE`, constraints, triggers e procedures |
 | 2 | [`docs/massa_de_dados.sql`](docs/massa_de_dados.sql) | `INSERT INTO`: massa de dados fictícia (seção 4) |
-| 3 | [`docs/testes.sql`](docs/testes.sql) | testes de `INSERT`, `UPDATE`, `DELETE`, constraints, triggers e procedures (T01 a T45) |
 | 4 | [`docs/consultas.sql`](docs/consultas.sql) | `SELECT` com `JOIN` (J), consultas gerenciais (G) e de auditoria (A) |
-| — | [`docs/exemplos_basicos.sql`](docs/exemplos_basicos.sql) | exemplos simples de manipulação |
-
+| — | [`docs/exemplos_basicos.sql`](docs/_criação.sql) | Exemplos simples de manipulação |
 O script contempla as etapas pedidas, nesta ordem lógica: (1) `CREATE DATABASE`; (2) `CREATE TABLE`; (3) constraints (PK, FK, `NOT NULL`, `UNIQUE`, `CHECK`); (4) `INSERT INTO` (massa); (5) `SELECT` com `JOIN`; (6) `UPDATE`; (7) `DELETE`; (8) consultas gerenciais; (9) consultas de auditoria. Os itens 6 e 7 estão em `testes.sql` (dentro de `START TRANSACTION … ROLLBACK`, para não alterar a massa).
 
 **Consultas gerenciais e de auditoria:** cada uma tem um cabeçalho com o código (`G01`…, `A01`…), a pergunta em português e o que atende, como neste exemplo:
@@ -572,7 +570,6 @@ As quantidades acima vêm da simulação; depois de rodar no MySQL, conferir com
 | Dicionário de dados (HTML único) | [`docs/dicionario_dados.html`](docs/dicionario_dados.html) |
 | Script SQL | [`docs/script.sql`](docs/script.sql) |
 | Massa de dados | [`docs/massa_de_dados.sql`](docs/massa_de_dados.sql) |
-| Testes de INSERT/UPDATE/DELETE e constraints | [`docs/testes.sql`](docs/testes.sql) |
 | Consultas (J, G e A) | [`docs/consultas.sql`](docs/consultas.sql) |
 | Exemplos SQL | [`docs/exemplos_basicos.sql`](docs/exemplos_basicos.sql) |
 | Indicadores, BI e IA | [`docs/indicadores_kpis.md`](docs/indicadores_kpis.md) |
