@@ -564,7 +564,7 @@ As quantidades acima vêm da simulação; depois de rodar no MySQL, conferir com
 | Artefato | Localização |
 | :---- | :---- |
 | Relatório Técnico Final | [`README.md`](README.md) |
-| DER conceitual revisado | [`diagramas/der_conceitual`](diagramas/) [PREENCHER arquivo do brModelo]; apoio: [`.png`](diagramas/der_conceitual.png) e [`.md`](diagramas/der_conceitual.md) |
+| DER conceitual revisado | [`diagramas/der_conceitual`](diagramas/). apoio: [`.png`](diagramas/der_conceitual.png) e [`.md`](diagramas/der_conceitual.md) |
 | Modelo lógico (editável, brModelo) | [`diagramas/modelo_logico.brm`](diagramas/modelo_logico.brm) |
 | Modelo lógico (imagem) | [`diagramas/modelo_logico.png`](diagramas/modelo_logico.png) |
 | Modelo lógico (texto) | [`docs/modelo_logico.md`](docs/modelo_logico.md) |
@@ -577,7 +577,6 @@ As quantidades acima vêm da simulação; depois de rodar no MySQL, conferir com
 | Consultas (J, G e A) | [`docs/consultas.sql`](docs/consultas.sql) |
 | Exemplos SQL | [`docs/exemplos_basicos.sql`](docs/exemplos_basicos.sql) |
 | Indicadores, BI e IA | [`docs/indicadores_kpis.md`](docs/indicadores_kpis.md) |
-| Roteiro do pitch | [`docs/roteiro_apresentacao.md`](docs/roteiro_apresentacao.md) |
 | Levantamento | [`levantamento/levantamento.md`](levantamento/levantamento.md) |
 | Requisitos | [`levantamento/Requisitos.md`](levantamento/Requisitos.md) |
 | Processos de negócio | [`levantamento/processos.md`](levantamento/processos.md) |
@@ -589,17 +588,13 @@ As quantidades acima vêm da simulação; depois de rodar no MySQL, conferir com
 Os commits devem ser feitos pelos próprios integrantes, cada um com a própria conta do GitHub, de forma equilibrada e ao longo do tempo (não um único commit final). O nome configurado em cada conta deve ser compatível com o nome da tabela de Integrantes. [COMPLEMENTAR: informar como foi a divisão dos commits e conferir o usuário do GitHub de cada integrante.]
 
 **Divisão de tarefas**
-
-| Integrante | Responsabilidade | Arquivos ou atividades |
-| :---- | :---- | :---- |
-| Kevin Gomes | Revisão do DER, modelo lógico, chaves, normalização, justificativa técnica, README e organização da documentação. | Modelo lógico, normalização, justificativa técnica e README. |
-| Brayan Antonio Daza Paredes | [CONFIRMAR RESPONSABILIDADE] | [PREENCHER] |
-| Gabriel dos Santos Eufrasio | [CONFIRMAR RESPONSABILIDADE] | [PREENCHER] |
-| Gabriel Gonçalves Moura | [CONFIRMAR RESPONSABILIDADE] | [PREENCHER] |
-| Felipe Militão | [CONFIRMAR RESPONSABILIDADE] | [PREENCHER] |
-
-[CONFIRMAR com o grupo quem realizou cada atividade; só a linha do Kevin está preenchida.]
-
+| **Integrante** | **Responsabilidade** | **Arquivos ou atividades** |
+|---|---|---|
+| **Kevin Gomes** | Revisão do DER, modelo lógico, chaves, normalização, justificativa técnica, README e organização da documentação. | Modelo lógico, normalização, justificativa técnica e README. |
+| **Brayan Antonio Daza Paredes** | Implementação da estrutura do banco de dados, criação das tabelas, definição das chaves primárias e estrangeiras e aplicação das restrições. | `script.sql` – criação do banco, tabelas, PKs, FKs e restrições. |
+| **Gabriel dos Santos Eufrasio** | Elaboração e inserção da massa de dados fictícios, execução de operações de atualização e exclusão e realização de testes no banco de dados. | `massa_dados.sql` – INSERT, UPDATE, DELETE e testes de integridade. |
+| **Gabriel Gonçalves Moura** | Desenvolvimento de consultas SQL para extração de informações, utilização de JOINs, consultas gerenciais e verificações para auditoria. | `consultas.sql` – SELECT, JOIN e consultas gerenciais. |
+| **Felipe Militão** | Definição de indicadores de desempenho (KPIs), análise de informações de vendas e estoque e elaboração de propostas de utilização de Business Intelligence (BI). | Indicadores (KPIs), análise de vendas e estoque e propostas de BI. |
 ---
 
 ## 6. Uso de Inteligência Artificial
@@ -659,10 +654,6 @@ Ferramentas de IA foram usadas como **apoio** à organização, revisão e confe
 | Trechos rejeitados ou corrigidos | [PREENCHER após rodar no MySQL: o que o grupo ajustou] |
 | Justificativa da escolha final | Mantida a versão do `script.sql` do grupo como referência e a documentação alinhada a ele |
 | Reflexão crítica | A conferência foi por simulação: triggers, procedures e `SET TIMESTAMP` não foram executados em MySQL real. O volume da massa é estimado, não confirmado com a adega. O grupo precisa rodar e revisar tudo |
-
-**Registros dos demais integrantes (script SQL e apresentação)**
-
-[PREENCHER: cada integrante responsável declara ferramentas, prompts, respostas, ajustes e reflexão crítica. Se alguém não usou IA em alguma etapa, declarar explicitamente.]
 
 ---
 
