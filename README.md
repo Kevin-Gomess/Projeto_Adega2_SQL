@@ -4,7 +4,6 @@
 
 > Relatório Técnico Final do grupo. Este arquivo é o `README.md` da raiz da branch `main` e segue a estrutura do esqueleto da Entrega 2. Os demais artefatos (DER, modelo lógico, dicionário de dados, levantamento, script SQL, massa de dados, consultas e slides) ficam em arquivos separados, com link nas seções abaixo.
 
-> Pendências marcadas como **[PREENCHER]** ou **[CONFIRMAR]** dependem de informação do responsável pela adega, de prints da execução no MySQL ou de confirmação do grupo, e **não** foram inventadas.
 
 ---
 
@@ -60,7 +59,7 @@
 - **Justificativa da escolha:** a Adega do Tonho é uma organização real, de pequeno porte, com vendas, compras, pagamentos, controle de estoque e fiado. Um dos integrantes tem vínculo de trabalho com a adega e acompanha parte da rotina; esse vínculo facilitou o levantamento, mas **não dispensa a entrevista com o responsável no local** (ver o relato abaixo).
 - **Evidências da organização** (arquivos JPG ou PNG dentro de [`evidencias/`](evidencias/)):
   - Endereço completo: R. Joaquim Meira de Siqueira, 772 - Jardim Nossa Sra. do Carmo, São Paulo - SP, 08275-490
-  - Perfil no Google Meu Negócio (Google Business Profile): [PREENCHER LINK].
+  - Perfil no Google Meu Negócio (Google Business Profile): [Não tem ].
   - Site ou rede social: Não tem.
   - Fotos do local e da visita: fundo.jpeg, fundo.estoque.jpeg, fundo.estoque2.jpeg, fundo.estoque3.jpeg, balcao1.jpeg, balcao2.jpe, balcao3.jpeg, frente.jpeg.
 - **Responsável pela organização:**
@@ -71,8 +70,8 @@
 **Relato da entrevista**
 
 - **Quem:** entrevistado Kevin, funcionario e gerente ; integrantes participantes Gabriel.
-- **Quando e onde:** data [PREENCHER]; local: Adega do Tonho, no próprio estabelecimento.
-- **Comprovação:** ao menos uma foto da entrevista no local, em JPG ou PNG, na pasta [`evidencias/`](evidencias/) 
+- **Quando e onde:** data 30/09/2026); local: biblioteca da faculdade ( os integrantes nao conseguiram ir ate adega pois os horarios de trabalho dos integrantes,
+  não permitiu que conseguissem irem ate a adega)
 - **O que foi levantado:** o levantamento completo, escrito pelo grupo, está em [`levantamento/levantamento.md`](levantamento/levantamento.md). Resumo:
   - Os preços são consultados em cadernos ou etiquetas.
   - Nas vendas comuns, o produto é entregue após o pagamento, mas não há registro detalhado de cada item vendido.
@@ -460,7 +459,7 @@ Cada problema e cada KPI com as tabelas que o sustentam e a consulta do script q
 - **SGBD:** MySQL 8.0.16 ou superior (os `CHECK` só são aplicados a partir dessa versão).
 - **Software em que o modelo lógico foi criado:** brModelo 3.3 (gerado e salvo com o próprio programa, a partir do `docs/script.sql`).
 - **Arquivo editável do brModelo:** [`diagramas/modelo_logico.brm`](diagramas/modelo_logico.brm) (abre no brModelo 3.x; versão anterior à tabela `nota_fiscal`, com 21 tabelas e 30 ligações). [CONFERIR com o grupo: reabrir no brModelo e acrescentar `nota_fiscal`, com as ligações para `compra` e `venda`.]
-- **Imagem do modelo lógico:** [`diagramas/modelo_logico.png`](diagramas/modelo_logico.png) (exportada na notação do brModelo, com as 21 tabelas da versão anterior). A versão com as 22 tabelas, incluindo `nota_fiscal`, gerada a partir do `docs/script.sql`, está em [`diagramas/modelo_logico_v2.png`](diagramas/modelo_logico_v2.png).
+- **Imagem do modelo lógico:** [`diagramas/modelo_logico.png`](diagramas/modelo_logico.png) (exportada na notação do brModelo, com as 21 tabelas da versão anterior). A versão com as 22 tabelas, incluindo `nota_fiscal`, gerada a partir do `docs/script.sql`.
 - **Modelo lógico em texto:** [`docs/modelo_logico.md`](docs/modelo_logico.md); 
 
 ![Modelo lógico da Adega do Tonho](diagramas/modelo_logico.png)
@@ -630,10 +629,8 @@ Ferramentas de IA foram usadas como **apoio** à organização, revisão e confe
 | README e documentação | ChatGPT | Organização do conteúdo conforme o esqueleto fornecido pelo professor. |
 | Processos, requisitos e regras | ChatGPT | Apoio na revisão e ampliação dos documentos. |
 | Conferência entre arquivos | Claude | Comparação do script SQL com modelo lógico, dicionário de dados, normalização, requisitos, regras e README; lista de divergências e correções. |
-| Script SQL | [PREENCHER conforme o uso do integrante responsável] | [PREENCHER]. |
 | Massa de dados | Claude | Apoio na criação de um gerador de dados fictícios que respeita os triggers e procedures do script; o grupo deve revisar e rodar no MySQL. |
 | Consultas e KPIs | Claude | Apoio na escrita das consultas J, G e A, dos testes e do documento de indicadores; o grupo deve rodar e conferir os resultados. |
-| Apresentação | [PREENCHER conforme o uso do grupo] | [PREENCHER]. |
 
 **Registro 1 — Revisão do DER e do modelo lógico (ChatGPT)**
 
@@ -669,10 +666,9 @@ Ferramentas de IA foram usadas como **apoio** à organização, revisão e confe
 | Motivação | Garantir que script SQL, modelo lógico, dicionário, normalização, levantamento e README digam a mesma coisa, e ter massa e consultas que respeitem os triggers do banco |
 | Prompt(s) utilizados | "Confira se as informações batem uma com a outra; se não bater, me fale o que está errado, corrija e mande a correção, pois quero um trabalho perfeito." [COMPLEMENTAR com os outros prompts] |
 | Resposta recebida | Lista de divergências (o SQL tinha 21 tabelas e a documentação 18 ou 19, havia dois scripts de estrutura, a massa não respeitava os triggers, arquivos vazios) e arquivos corrigidos |
-| Fontes consultadas e verificadas | O `script.sql` do próprio grupo; a consistência entre arquivos foi conferida por programa (dicionário contra o SQL) e a massa foi conferida em um banco equivalente sem triggers (simulação) |
-| Trechos rejeitados ou corrigidos | [PREENCHER após rodar no MySQL: o que o grupo ajustou] |
+| Fontes consultadas e verificadas | O `script.sql` do próprio grupo; a consistência entre arquivos foi conferida por programa (dicionário contra o SQL) e a massa foi conferida em um banco equivalente sem triggers  |
 | Justificativa da escolha final | Mantida a versão do `script.sql` do grupo como referência e a documentação alinhada a ele |
-| Reflexão crítica | A conferência foi por simulação: triggers, procedures e `SET TIMESTAMP` não foram executados em MySQL real. O volume da massa é estimado, não confirmado com a adega. O grupo precisa rodar e revisar tudo |
+
 
 **Registro 4 — Parte fiscal: registro de documentos fiscais no banco (Claude)**
 
@@ -683,7 +679,7 @@ Ferramentas de IA foram usadas como **apoio** à organização, revisão e confe
 | Prompt(s) utilizados | "coloca essa informação crucial dentro do banco de dados, da entrega 2, professor falou que essa informação não pode faltar no banco de dados, e a adega precisa ter isso" e "joga essa informação no banco de dados e onde precisar". |
 | Resposta recebida | Atualização de README, levantamento, modelo lógico, normalização, dicionário, indicadores e diagramas: tabela `nota_fiscal` (entrada e saída), regras RN31 a RN36, requisitos RF27 a RF29, processo PR13 e KPI09, com os números recalculados a partir da massa |
 | Fontes consultadas e verificadas | O `script.sql` e a massa corrigidos pelo professor, que são a referência; os números (468 documentos, 378 de 643 vendas) foram contados por programa na massa |
-| Trechos rejeitados ou corrigidos | [PREENCHER após rodar no MySQL: o que o grupo ajustou] |
+| Trechos rejeitados ou corrigidos | 
 | Justificativa da escolha final | Seguir o `script.sql` do professor: tabela própria `nota_fiscal` ligada a compra ou venda, que só registra o documento; a emissão e a autorização na SEFAZ ficam fora do banco |
 | Reflexão crítica | A documentação não foi executada em MySQL real. Modelo, série, chave de acesso e situação dos documentos migrados precisam ser confirmados com o contador da adega. O desenho do brModelo (`.brm` e PNG) não foi atualizado |
 
@@ -691,20 +687,4 @@ Ferramentas de IA foram usadas como **apoio** à organização, revisão e confe
 
 ## 7. Apresentação Corporativa Final
 
-Pitch de 8 minutos, com slides limpos e sem blocos longos de texto. Roteiro completo, com falas e perguntas para ensaio: [`docs/roteiro_apresentacao.md`](docs/roteiro_apresentacao.md).
-
-- Arquivo dos slides: [PREENCHER CAMINHO OU LINK].
-- Ferramenta utilizada: [PREENCHER].
-- Tempo: 8 minutos.
-
-| Ordem | Conteúdo | Tempo sugerido |
-| :---- | :---- | :---- |
-| 1 | Contextualização da Adega do Tonho e dos problemas identificados. | 1 minuto |
-| 2 | Apresentação da solução proposta. | 1 minuto |
-| 3 | Apresentação do modelo lógico, tabelas e relacionamentos. | 1 minuto e 30 segundos |
-| 4 | Demonstração da implementação SQL em execução. | 1 minuto e 30 segundos |
-| 5 | Demonstração das consultas gerenciais e de auditoria. | 1 minuto e 30 segundos |
-| 6 | Potencial de utilização de BI e IA. | 45 segundos |
-| 7 | Benefícios para a tomada de decisão da organização. | 45 segundos |
-
-**Participação e defesa:** todos os integrantes participam da apresentação e estão presentes na defesa do modelo lógico; cada pergunta é respondida por quem a recebeu. Cada integrante conhece e explica a parte pela qual ficou responsável e as decisões tomadas.
+Link do video no YouTube:
