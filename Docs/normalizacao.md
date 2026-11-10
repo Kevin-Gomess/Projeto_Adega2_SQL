@@ -7,7 +7,7 @@ A normalização foi utilizada para organizar as informações do banco de dados
 
 O processo foi analisado considerando as três primeiras formas normais: Primeira Forma Normal (1FN), Segunda Forma Normal (2FN) e Terceira Forma Normal (3FN).
 
-A estrutura utilizada como referência é a versão 2.0 do arquivo `docs/script.sql`, que possui 21 tabelas.
+A estrutura utilizada como referência é a versão 2.0 do arquivo `docs/script.sql`, que possui 22 tabelas.
 
 ## 2. Primeira Forma Normal (1FN)
 
@@ -82,6 +82,10 @@ Os dados gerais da venda ficam na tabela `venda`, enquanto os pagamentos ficam n
 
 Essa separação permite registrar mais de um pagamento para uma mesma venda, sem repetir os dados principais da venda.
 
+### Documento fiscal
+
+Os campos `venda.nr_documento_fiscal` e `compra.nr_nota_fiscal` guardam só o número ou a chave informados na operação. Os dados completos do documento (modelo, série, chave de acesso, data de emissão, valor e situação) ficam em `nota_fiscal`, que depende de `id_nota_fiscal` e se liga a uma compra (`id_compra`, documento de entrada) ou a uma venda (`id_venda`, documento de saída), nunca às duas. Assim a venda e a compra não repetem esses dados, e `nota_fiscal` não repete dados do fornecedor nem do funcionário: chega a eles pela compra ou pela venda. `nota_fiscal.vl_total` repete o total da operação de propósito (ver seção 6), porque o documento registra o valor informado nele.
+
 ### Produto e estoque
 
 Os dados de identificação e comercialização ficam na tabela `produto`, enquanto as informações de quantidade e localização geral ficam na tabela `estoque`.
@@ -124,11 +128,12 @@ Alguns exemplos de benefícios são:
 
 ## 6. Redundâncias que mantivemos de propósito
 
-Quatro valores poderiam ser calculados a partir de outras tabelas, mas ficam gravados por motivo de histórico ou de controle. A consistência deles é protegida por triggers, procedures e consultas de auditoria:
+Cinco valores poderiam ser calculados a partir de outras tabelas, mas ficam gravados por motivo de histórico ou de controle. A consistência deles é protegida por triggers, procedures e consultas de auditoria:
 
 | Coluna | Poderia ser calculada de | Por que fica gravada |
 |---|---|---|
 | `estoque.qt_atual` | soma das movimentações do produto | Saber o saldo sem somar todo o histórico. Só muda por `movimentacao_estoque` (trigger) e a consulta de auditoria A01 confere. |
+| `nota_fiscal.vl_total` | `venda.vl_total` ou `compra.vl_total` | O documento fiscal guarda o valor informado nele. Na massa, o valor é copiado da operação; o banco não obriga a igualdade, então diferenças devem ser conferidas. |
 | `venda.vl_total` | soma dos itens menos o desconto | Guarda o valor cobrado no momento. A procedure de fiado e o fechamento de caixa conferem com itens e pagamentos (consulta A02). |
 | `fiado.vl_pago` e `st_fiado` | soma de `pagamento_fiado` | Mostrar o saldo rápido. O trigger atualiza os dois a cada recebimento e a consulta A09 confere. |
 | `lote.qt_disponivel` | soma das movimentações do lote | Escolher o lote na venda. Começa em zero e só muda por movimentação. |
