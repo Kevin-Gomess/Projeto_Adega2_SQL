@@ -54,6 +54,12 @@ RF25	O sistema deve permitir registrar suprimentos, sangrias e despesas em dinhe
 
 RF26	O sistema deve permitir controlar o volume restante de cada garrafa aberta para venda de doses, impedindo a venda de doses acima do volume disponível.
 
+RF27	O sistema deve permitir registrar o documento fiscal de cada compra (entrada) e de cada venda (saída), com o modelo (NF-e, NFC-e, cupom fiscal ou outro), o número, a série, a chave de acesso, a data de emissão e o valor total.
+
+RF28	O sistema deve permitir consultar os documentos fiscais de entrada, com a compra e o fornecedor, e os de saída, com a venda, o caixa e o funcionário, e acompanhar a situação de cada documento (sem validação, autorizada, cancelada ou denegada).
+
+RF29	O sistema deve impedir que um documento fiscal fique ligado ao mesmo tempo a uma compra e a uma venda, que uma compra ou venda tenha mais de um documento e que a chave de acesso se repita.
+
 
 Requisitos não funcionais
 
