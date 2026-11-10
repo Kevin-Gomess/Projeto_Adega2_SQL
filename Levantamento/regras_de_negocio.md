@@ -54,8 +54,20 @@
 
 - **RN27 — Comercialização de produtos de tabaco:** A comercialização de produtos fumígenos deve respeitar as restrições legais, incluindo a proibição de venda a menores de 18 anos, as advertências sanitárias obrigatórias e as regras de exposição dos produtos nos pontos de venda.
 
-- **RN28 — Documentos fiscais:** As operações de venda e compra devem ter seus documentos fiscais registrados e emitidos conforme as obrigações aplicáveis ao enquadramento tributário e à legislação estadual da organização.
+- **RN28 — Documentos fiscais:** As operações de venda e compra devem ter seus documentos fiscais registrados e emitidos conforme as obrigações aplicáveis ao enquadramento tributário e à legislação estadual da organização. O banco registra esses documentos na tabela NOTA_FISCAL (regras RN31 a RN36): na compra, a nota do fornecedor (entrada); na venda, a NFC-e ou o cupom fiscal (saída). Os campos `compra.nr_nota_fiscal` e `venda.nr_documento_fiscal` guardam o número ou a chave informados na operação.
 
 - **RN29 — Proteção de dados pessoais:** Os dados pessoais de clientes e funcionários devem ser utilizados somente para finalidades relacionadas às atividades da organização, com acesso restrito e tratamento adequado conforme a LGPD.
 
 - **RN30 — Auditoria:** As operações importantes do sistema, como acessos, inclusões, alterações, exclusões e consultas a dados pessoais, devem possuir registro de auditoria, identificando o funcionário, a data, o tipo de evento e o registro envolvido.
+
+- **RN31 — Documento fiscal de entrada ou saída:** Todo documento fiscal registrado em NOTA_FISCAL é de entrada (`ENTRADA`, ligado a uma compra) ou de saída (`SAIDA`, ligado a uma venda). Nunca fica ligado às duas operações ao mesmo tempo nem a nenhuma.
+
+- **RN32 — Um documento por operação:** Cada compra e cada venda tem no máximo um documento fiscal registrado.
+
+- **RN33 — Dados do documento:** O documento informa o modelo (NF-e, NFC-e, cupom fiscal ou outro, que é o padrão), o número (obrigatório), a série e a data de emissão (quando houver) e o valor total, que não pode ser negativo.
+
+- **RN34 — Chave de acesso:** A chave de acesso, quando existir, tem 44 dígitos e não pode se repetir entre documentos.
+
+- **RN35 — Situação do documento:** A situação é SEM_VALIDACAO (padrão: registro interno), AUTORIZADA, CANCELADA ou DENEGADA. O banco não consulta a SEFAZ: a situação AUTORIZADA, CANCELADA ou DENEGADA deve ser confirmada fora do banco e só então informada.
+
+- **RN36 — Documentos migrados:** Os dados fiscais já existentes (`compra.nr_nota_fiscal` e `venda.nr_documento_fiscal`) foram migrados para NOTA_FISCAL com modelo OUTRO e situação SEM_VALIDACAO. Série, chave de acesso e data de emissão ficam vazias enquanto não forem conhecidas, e o documento precisa ser conferido com o contador da adega.
