@@ -4,7 +4,7 @@
 ## Diagrama
 
 ```mermaid
-
+erDiagram
     CATEGORIA ||--o{ PRODUTO : "classifica"
     PRODUTO ||--|| ESTOQUE : "possui"
     PRODUTO ||--o{ MOVIMENTACAO_ESTOQUE : "é movimentado em"
@@ -28,6 +28,8 @@
     COMPRA ||--|{ ITEM_COMPRA : "contém"
     PRODUTO ||--o{ ITEM_COMPRA : "é comprado em"
     LOTE |o--o{ ITEM_VENDA : "é vendido de"
+    COMPRA ||--o| NOTA_FISCAL : "é documentada por (entrada)"
+    VENDA ||--o| NOTA_FISCAL : "é documentada por (saída)"
 
     CATEGORIA {
         int id_categoria PK
@@ -45,6 +47,19 @@
         int qt_ml_dose
         decimal vl_dose
         bool fl_ativo
+    }
+    NOTA_FISCAL {
+        int id_nota_fiscal PK
+        enum tp_operacao
+        enum tp_modelo
+        string nr_numero
+        string nr_serie
+        string cd_chave_acesso UK
+        datetime dt_emissao
+        decimal vl_total
+        enum st_documento
+        string ds_observacao
+        datetime dt_cadastro
     }
     ESTOQUE {
         int id_estoque PK
@@ -202,10 +217,12 @@ Notação (mín,máx) ao lado de cada entidade: quantas vezes uma ocorrência de
 | 21 | COMPRA | (1,N) | contém | (1,1) | ITEM_COMPRA | `item_compra.id_compra` |
 | 22 | PRODUTO | (0,N) | é comprado em | (1,1) | ITEM_COMPRA | `item_compra.id_produto` |
 | 23 | LOTE | (0,N) | é vendido de | (0,1) | ITEM_VENDA | `item_venda.id_lote` (obrigatório só para produto com controle de validade) |
+| 24 | COMPRA | (0,1) | é documentada por | (0,1) | NOTA_FISCAL | `nota_fiscal.id_compra (UNIQUE, NULL)`: documento de entrada |
+| 25 | VENDA | (0,1) | é documentada por | (0,1) | NOTA_FISCAL | `nota_fiscal.id_venda (UNIQUE, NULL)`: documento de saída |
 
 ## O que foi corrigido em relação ao DER anterior
 
-- **Cardinalidade mínima e máxima** em todos os 23 relacionamentos (antes só havia 1 e N).
+- **Cardinalidade mínima e máxima** em todos os 25 relacionamentos (antes só havia 1 e N).
 - **Sem chaves estrangeiras** no modelo conceitual, e **identificador (PK) marcado** em todas as entidades.
 - **ESTOQUE** agora liga a **PRODUTO** (1:1), não a VENDA. A venda reduz o estoque por meio de ITEM_VENDA e MOVIMENTACAO_ESTOQUE, como a justificativa técnica já defendia.
 - **VENDA e PAGAMENTO** têm **um só** relacionamento (1 venda tem 1 a N pagamentos, o que cobre o pagamento dividido).
@@ -214,6 +231,7 @@ Notação (mín,máx) ao lado de cada entidade: quantas vezes uma ocorrência de
 - **FIADO** passou a nascer de uma única **VENDA**, e cada **ITEM_FIADO** aponta para a linha de **ITEM_VENDA** de onde veio (relacionamentos 17 e 18). Produto, quantidade e preço não são copiados: ficam só em ITEM_VENDA.
 - **LOTE**: um **ITEM_COMPRA** pode originar vários lotes, porque a mesma entrega pode trazer validades diferentes (relacionamento 6, sem UNIQUE).
 - **Ajuste de 09/11/2026** para bater com o `script.sql`: incluídos `fl_controla_validade` (PRODUTO), `vl_fiado` (ITEM_FIADO) e o relacionamento 23 entre LOTE e ITEM_VENDA (`item_venda.id_lote`), que existia no script e faltava no DER.
+- **Ajuste de nota fiscal:** incluída a entidade **NOTA_FISCAL** (relacionamentos 24 e 25), que guarda o documento fiscal de uma compra (entrada) ou de uma venda (saída). Os campos `venda.nr_documento_fiscal` e `compra.nr_nota_fiscal` continuam existindo. A entidade só registra o documento: a emissão e a autorização na SEFAZ ficam fora do banco.
 - Modelo desenhado em Mermaid (texto), sem aparência de imagem gerada, e versionado junto do código.
 
 ## Regra para pagamento dividido e fiado
@@ -333,6 +351,24 @@ Venda feita no balcão, ligada ao funcionário e ao caixa aberto.
 | st_venda | Situação da venda |  |
 | nr_documento_fiscal | Chave de acesso da NFC-e ou número do cupom fiscal |  |
 | fl_maioridade_conferida | Indica que o atendente conferiu a maioridade do comprador |  |
+
+### NOTA_FISCAL
+
+Documento fiscal de entrada (ligado a uma compra) ou de saída (ligado a uma venda). Registra o modelo, o número, a série, a chave de acesso de 44 dígitos, a data de emissão, o valor e a situação (sem validação, autorizada, cancelada ou denegada). Cada compra ou venda tem no máximo um documento. A entidade só registra o documento: não emite NF-e/NFC-e nem consulta ou autoriza documentos na SEFAZ.
+
+| Atributo | Descrição | Identificador |
+|---|---|---|
+| id_nota_fiscal | Identificador do documento fiscal | PK |
+| tp_operacao | Entrada (compra) ou saída (venda) |  |
+| tp_modelo | NF-e, NFC-e, cupom fiscal ou outro |  |
+| nr_numero | Número ou identificador informado no documento |  |
+| nr_serie | Série do documento, quando houver |  |
+| cd_chave_acesso | Chave de acesso (44 dígitos), quando disponível | único |
+| dt_emissao | Data e hora de emissão informadas no documento |  |
+| vl_total | Valor total do documento |  |
+| st_documento | Situação de controle do documento |  |
+| ds_observacao | Observações sobre o documento |  |
+| dt_cadastro | Data e hora do registro no sistema |  |
 
 ### FIADO
 
