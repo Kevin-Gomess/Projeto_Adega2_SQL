@@ -34,11 +34,12 @@ As tabelas principais do projeto são:
 - ITEM_COMPRA
 - LOTE
 - MOVIMENTACAO_ESTOQUE
+- NOTA_FISCAL
 - GARRAFA_ABERTA
 - MOVIMENTACAO_CAIXA
 - LOG_ACESSO
 
-São 21 tabelas: as 18 entidades de negócio do DER conceitual, mais três tabelas de apoio criadas na implementação (GARRAFA_ABERTA, MOVIMENTACAO_CAIXA e LOG_ACESSO). Elas existem para controlar o volume das garrafas abertas para dose, os suprimentos, sangrias e despesas do caixa e a auditoria.
+São 22 tabelas: as 19 entidades de negócio do DER conceitual (as 18 anteriores mais NOTA_FISCAL, dos documentos fiscais), mais três tabelas de apoio criadas na implementação (GARRAFA_ABERTA, MOVIMENTACAO_CAIXA e LOG_ACESSO). Elas existem para controlar o volume das garrafas abertas para dose, os suprimentos, sangrias e despesas do caixa e a auditoria.
 
 ## 3. Estrutura das tabelas
 
@@ -69,7 +70,7 @@ Armazena as categorias utilizadas para organizar os produtos e indicar se possue
   - vl_dose — DECIMAL(10,2)
   - fl_ativo — TINYINT(1)
 
-Armazena os produtos comercializados pela adega, incluindo preços, se o produto exige controle de validade por lote e as informações sobre a venda por dose.
+Armazena os produtos comercializados pela adega, incluindo preços, se o produto exige controle de validade por lote, as informações sobre a venda por dose.
 
 ### 3.3 ESTOQUE
 
@@ -165,7 +166,7 @@ Registra a abertura e o fechamento do caixa, incluindo os valores esperados e co
   - nr_documento_fiscal — VARCHAR(44)
   - fl_maioridade_conferida — TINYINT(1)
 
-Registra as vendas realizadas, o funcionário responsável e o caixa utilizado.
+Registra as vendas realizadas, o funcionário responsável e o caixa utilizado. O campo nr_documento_fiscal guarda a chave de acesso da NFC-e ou o número do cupom fiscal; o documento completo fica em NOTA_FISCAL.
 
 ### 3.9 FIADO
 
@@ -382,9 +383,32 @@ Controla o volume que ainda resta em cada garrafa aberta para venda de doses. A 
 
 Registra suprimentos (entrada de dinheiro), sangrias e despesas (saídas) do caixa, para que o valor esperado no fechamento considere o dinheiro que entrou ou saiu fora das vendas.
 
+### 3.22 NOTA_FISCAL
+
+- **PK:** id_nota_fiscal
+- **FKs:**
+  - id_compra → compra(id_compra) (NULL, UNIQUE)
+  - id_venda → venda(id_venda) (NULL, UNIQUE)
+- **Atributos:**
+  - id_nota_fiscal — BIGINT UNSIGNED
+  - tp_operacao — ENUM (ENTRADA, SAIDA)
+  - tp_modelo — ENUM (NF_E, NFC_E, CUPOM_FISCAL, OUTRO), padrão OUTRO
+  - nr_numero — VARCHAR(44)
+  - nr_serie — VARCHAR(10) (NULL)
+  - cd_chave_acesso — CHAR(44) (UNIQUE, NULL)
+  - dt_emissao — DATETIME (NULL)
+  - vl_total — DECIMAL(12,2)
+  - st_documento — ENUM (SEM_VALIDACAO, AUTORIZADA, CANCELADA, DENEGADA), padrão SEM_VALIDACAO
+  - ds_observacao — VARCHAR(255) (NULL)
+  - id_compra — INT UNSIGNED (NULL)
+  - id_venda — BIGINT UNSIGNED (NULL)
+  - dt_cadastro — DATETIME
+
+Registra os documentos fiscais de entrada (ligados a uma compra) e de saída (ligados a uma venda): modelo, número, série, chave de acesso, data de emissão, valor e situação. A constraint chk_nota_fiscal_origem exige que ENTRADA tenha só id_compra e SAIDA tenha só id_venda, e as chaves UNIQUE em id_compra e id_venda garantem no máximo um documento por operação. A tabela só registra o documento: não emite NF-e/NFC-e nem consulta ou autoriza documentos na SEFAZ, e a situação AUTORIZADA, CANCELADA ou DENEGADA deve ser confirmada fora do banco.
+
 ## 4. Relacionamentos e cardinalidades
 
-As cardinalidades abaixo representam as 30 relações implementadas pelas chaves estrangeiras no script SQL:
+As cardinalidades abaixo representam as 32 relações implementadas pelas chaves estrangeiras no script SQL:
 
 | Relacionamento | Cardinalidade |
 |---|---|
@@ -418,6 +442,8 @@ As cardinalidades abaixo representam as 30 relações implementadas pelas chaves
 | CAIXA — MOVIMENTACAO_CAIXA | 1:N |
 | FUNCIONARIO — MOVIMENTACAO_CAIXA | 1:N |
 | FUNCIONARIO — LOG_ACESSO | 1:N |
+| COMPRA — NOTA_FISCAL | 1:1 (opcional) |
+| VENDA — NOTA_FISCAL | 1:1 (opcional) |
 
 Observação: a tabela LOG_ACESSO permite que um evento seja registrado sem funcionário associado, pois sua FK aceita valor nulo. A tabela ESTOQUE possui uma restrição UNIQUE em id_produto, garantindo no máximo um registro de estoque por produto.
 
@@ -444,6 +470,7 @@ Além das chaves e restrições, o script cria triggers e procedures que impedem
 | Soma dos pagamentos não passa do total da venda | `trg_pagamento_valida` |
 | Situação do fiado (ABERTO ou QUITADO) é calculada pelo valor pago | `trg_fiado_status_insert` e `trg_fiado_status_update` |
 | Auditoria de cliente, fiado, recebimento e fechamento de caixa | triggers `trg_*_audita_*` e `trg_pagamento_fiado_atualiza` |
+| Documento fiscal ligado a uma compra (entrada) ou a uma venda (saída), nunca às duas; um documento por operação; chave de acesso única; valor não negativo | constraints UNIQUE e CHECK de `nota_fiscal` |
 | Autorizar cliente para fiado (só gerente) | procedure `sp_autorizar_cliente_fiado` |
 | Abrir garrafa para dose | procedure `sp_abrir_garrafa` |
 | Lançar parte de uma venda no fiado, com limite e bloqueio | procedure `sp_registrar_venda_fiado` |
