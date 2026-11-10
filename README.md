@@ -498,12 +498,83 @@ As consultas gerenciais respondem aos problemas P1 a P5 e aos KPIs da seção 1.
 
 > Até aqui o script, a massa e as consultas foram conferidos apenas por **simulação** (banco equivalente sem triggers nem procedures). A execução real no MySQL ainda precisa ser feita e anotada abaixo.
 
-- Criação do banco a partir de um banco vazio: [PREENCHER].
-- Criação de todas as tabelas, triggers e procedures: [PREENCHER].
-- Inserção da massa de dados: [PREENCHER].
-- Execução das consultas e dos testes: [PREENCHER].
-- Erros encontrados e correções realizadas: [PREENCHER].
-- Evidências (prints): [`evidencias/`](evidencias/).
+REVISÃO DOS SCRIPTS — ADEGA
+
+ARQUIVOS E ORDEM DE EXECUÇÃO
+1. 01_criacao_banco_corrigido.sql
+2. 02_massa_de_dados_corrigida.sql
+3. 03_consultas_gerenciais.sql
+4. 04_exemplos_basicos_corrigidos.sql
+
+REQUISITO
+O script de criação utiliza recursos do MySQL 8, incluindo a collation utf8mb4_0900_ai_ci e restrições CHECK. Utilize MySQL 8.0.16 ou superior.
+
+ANTES DE EXECUTAR
+- O script de criação foi preparado para um banco vazio. Ele não apaga as tabelas de uma execução anterior e não deve ser repetido sobre o mesmo banco já criado.
+- Execute os arquivos na ordem indicada.
+- Aguarde a conclusão da carga de dados antes de executar consultas e testes.
+
+AVISOS SOBRE OS TESTES
+- O arquivo de testes contém 45 testes identificados de T01 a T45.
+- Vários testes negativos foram feitos para provocar rejeições esperadas de regras como FK, UNIQUE, CHECK, triggers e procedures. Confira o comentário "Esperado" de cada bloco.
+- Execute os testes individualmente ou use um cliente SQL configurado para continuar após erros esperados.
+- O teste T06 foi movido para o final porque a procedure sp_fechar_caixa inicia e confirma (COMMIT) sua própria transação. O ROLLBACK externo do arquivo original não desfazia o fechamento do caixa 91.
+- O T06 fecha o caixa 91 de verdade. Para repetir a bateria completa, recrie o banco e carregue a massa novamente.
+
+O QUE FOI CONFERIDO
+- 21 tabelas, 30 chaves estrangeiras, 33 triggers, 6 procedures e 18 restrições CHECK.
+- 45 blocos de consulta e 45 testes.
+- Correspondência das tabelas utilizadas pelos INSERTs e UPDATEs da massa de dados.
+- As referências das chaves estrangeiras apontam para tabelas existentes.
+
+ALTERAÇÕES DESTA REVISÃO
+- Removida uma linha de comentário SQL vazio do início do script de criação. Ela era válida e não representava erro de sintaxe.
+- Atualizada a explicação do comando SET TIMESTAMP no cabeçalho da massa de dados; a carga de dados não foi alterada.
+- T06 movido para o final e retirado o START TRANSACTION/ROLLBACK externo, que não desfazia o fechamento feito pela procedure.
+- Nenhuma tabela, coluna, chave, relacionamento, cardinalidade, trigger ou procedure foi redesenhada.
+
+RELATÓRIO DE REVISÃO E VALIDAÇÃO ESTÁTICA — BANCO ADEGA
+
+Objetivo
+Este relatório registra a conferência dos quatro arquivos SQL do projeto da Adega do Tonho. A revisão teve como foco verificar a estrutura do banco, a correspondência entre tabelas e referências, a organização da massa de dados e a sequência dos exemplos de consulta e teste, mantendo o modelo de dados original.
+
+1. Criação do banco a partir de um banco vazio
+O arquivo 01_criacao_banco_corrigido.sql contém os comandos para criar o banco de dados "adega" e selecioná-lo para a criação dos objetos. Na conferência do arquivo, foram identificadas 21 tabelas e 30 chaves estrangeiras. O script foi preparado para uma primeira execução em um banco vazio; ele não apaga automaticamente as tabelas de uma execução anterior, portanto não deve ser simplesmente executado novamente sobre um banco que já tenha sido criado.
+
+A estrutura foi conferida por leitura do SQL, mas a criação ainda precisa ser executada em uma instalação MySQL para confirmar o resultado no servidor.
+
+2. Criação de todas as tabelas, triggers e procedures
+No script de criação foram identificadas 21 tabelas, 30 chaves estrangeiras, 33 triggers, 6 procedures e 18 restrições CHECK. Também foi feita uma conferência das referências das chaves estrangeiras: todas apontam para tabelas que existem no próprio modelo.
+
+As tabelas, colunas, chaves, relacionamentos e cardinalidades do projeto foram preservados. A conferência foi estática; por isso, a criação efetiva desses objetos ainda depende da execução do arquivo em um servidor MySQL compatível.
+
+3. Inserção da massa de dados
+O arquivo 02_massa_de_dados_corrigida.sql possui aproximadamente 8.943 linhas. Na análise dos comandos foram encontrados 2.866 INSERTs, 518 UPDATEs e 411 chamadas de procedures. Os comandos de INSERT e UPDATE foram conferidos quanto aos nomes das tabelas utilizadas, e todos correspondem a tabelas existentes no banco.
+
+A massa simula a rotina da adega, incluindo cadastros, compras, recebimentos, abertura e fechamento de caixas, vendas, pagamentos e operações de fiado. Parte dos registros relacionados ao estoque e aos processos de venda é criada ou atualizada automaticamente pelas triggers e procedures; por isso, nem todas as tabelas recebem INSERT diretamente nesse arquivo.
+
+A carga ainda não foi executada em um servidor MySQL nesta revisão. Portanto, a quantidade final de registros inseridos e a conclusão sem erros precisam ser confirmadas durante a execução real.
+
+4. Execução das consultas e dos testes
+O arquivo 03_consultas_gerenciais.sql contém 45 blocos de consulta, incluindo consultas com JOIN, relatórios gerenciais e consultas de auditoria. Os rótulos e as referências às tabelas foram conferidos estaticamente.
+
+O arquivo 04_exemplos_basicos_corrigidos.sql contém 45 testes, identificados de T01 a T45. Há operações que devem funcionar e testes negativos que tentam, por exemplo, violar chaves estrangeiras, valores únicos, restrições CHECK e regras de negócio. Nesses casos, a rejeição da operação é o resultado esperado, de acordo com a descrição de cada teste.
+
+A execução desses arquivos em um servidor MySQL ainda está pendente. Assim, este relatório não afirma que as consultas retornaram resultados corretos nem que os 45 testes passaram em execução real. Os testes que provocam erros intencionais devem ser executados individualmente ou em uma ferramenta configurada para continuar após erros esperados.
+
+5. Erros encontrados e correções realizadas
+Durante a revisão foram observados e tratados os seguintes pontos:
+
+- No início do script de criação havia uma linha contendo apenas um comentário SQL vazio ("--"). Ela foi removida por limpeza. Essa linha era um comentário válido e, isoladamente, não representava um erro de sintaxe.
+- O teste T06 foi colocado no final do arquivo de testes. A procedure sp_fechar_caixa inicia e confirma sua própria transação com COMMIT; por isso, o ROLLBACK que existia ao redor da chamada não desfazia o fechamento do caixa.
+- No T06, foi removido o START TRANSACTION/ROLLBACK externo sem efeito. O teste agora fecha o caixa 91 de forma efetiva e deve ser executado por último, pois outros testes utilizam esse caixa.
+- A observação do cabeçalho da massa de dados sobre SET TIMESTAMP foi reescrita para explicar que o ajuste é feito no contexto da sessão. A alteração foi apenas no comentário explicativo, sem modificar a carga de dados.
+
+Não foram alteradas tabelas, colunas, chaves, relacionamentos, cardinalidades, triggers ou procedures. A alteração funcional no arquivo de testes foi apenas a reorganização do T06 e a retirada do controle transacional externo que não desfazia a operação.
+
+RESULTADO GERAL E LIMITAÇÃO DA REVISÃO
+A conferência estática identificou a estrutura esperada, verificou as 30 referências de chaves estrangeiras e confirmou que os comandos de INSERT e UPDATE da massa utilizam tabelas existentes. Também foram conferidas as quantidades de consultas e testes e a ordem do teste T06.
+
 
 ---
 
