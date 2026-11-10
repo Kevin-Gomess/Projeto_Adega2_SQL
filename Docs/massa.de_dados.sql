@@ -1,4 +1,3 @@
-
 -- Nenhum nome, CPF, telefone ou valor aqui é real. CPFs e CNPJs são números inventados e as
 -- pessoas e empresas não existem.
 --
@@ -8941,3 +8940,35 @@ UPDATE cliente SET fl_bloqueado = 1 WHERE id_cliente = 9;
 -- Volta ao relógio real e limpa o funcionário logado.
 SET TIMESTAMP = DEFAULT;
 SET @id_funcionario_logado = NULL;
+
+
+-- =====================================================================
+-- MIGRAÇÃO DOS DOCUMENTOS FISCAIS JÁ INFORMADOS NAS COMPRAS E VENDAS
+-- Os campos antigos guardavam somente o número/referência. Aqui eles são
+-- copiados para a tabela NOTA_FISCAL. Série, chave de acesso e data de emissão
+-- ficam sem preenchimento quando não há essa informação na massa original.
+-- SEM_VALIDACAO significa registro interno, não autorização pela SEFAZ.
+-- =====================================================================
+USE adega;
+
+INSERT INTO nota_fiscal
+  (tp_operacao, tp_modelo, nr_numero, nr_serie, cd_chave_acesso,
+   dt_emissao, vl_total, st_documento, ds_observacao, id_compra, id_venda)
+SELECT 'ENTRADA', 'OUTRO', TRIM(c.nr_nota_fiscal), NULL, NULL,
+       NULL, c.vl_total, 'SEM_VALIDACAO',
+       'Importado do campo nr_nota_fiscal da tabela compra; conferir dados completos do documento.',
+       c.id_compra, NULL
+  FROM compra AS c
+ WHERE c.nr_nota_fiscal IS NOT NULL
+   AND TRIM(c.nr_nota_fiscal) <> '';
+
+INSERT INTO nota_fiscal
+  (tp_operacao, tp_modelo, nr_numero, nr_serie, cd_chave_acesso,
+   dt_emissao, vl_total, st_documento, ds_observacao, id_compra, id_venda)
+SELECT 'SAIDA', 'OUTRO', TRIM(v.nr_documento_fiscal), NULL, NULL,
+       NULL, v.vl_total, 'SEM_VALIDACAO',
+       'Importado do campo nr_documento_fiscal da tabela venda; conferir se corresponde a NFC-e ou cupom fiscal.',
+       NULL, v.id_venda
+  FROM venda AS v
+ WHERE v.nr_documento_fiscal IS NOT NULL
+   AND TRIM(v.nr_documento_fiscal) <> '';
