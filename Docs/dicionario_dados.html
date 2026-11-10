@@ -12,7 +12,7 @@
     <p>Este documento apresenta as tabelas, os atributos, os tipos de dados, as descrições e as regras de negócio do banco de dados da Adega do Tonho.</p>
 
     <p><strong>SGBD:</strong> MySQL 8.0</p>
-    <p><strong>Modelo de referência:</strong> Modelo lógico enviado em XML, com 19 entidades.</p>
+    <p><strong>Modelo de referência:</strong> Modelo lógico do script <code>docs/script.sql</code> (versão 2.0, com a tabela nota_fiscal), com 22 tabelas.</p>
 
     <h2>1. Convenções utilizadas</h2>
 
@@ -94,6 +94,12 @@
             <td>DECIMAL(10,2)</td>
             <td>Preço de venda da unidade fechada.</td>
             <td>Obrigatório; deve ser maior ou igual a zero.</td>
+        </tr>
+        <tr>
+            <td>fl_controla_validade</td>
+            <td>TINYINT(1)</td>
+            <td>Indica se o produto exige controle por lote e data de validade.</td>
+            <td>Obrigatório; padrão 1. 1 = a venda exige informar o lote; 0 = produto sem validade controlada (por exemplo, cigarro ou isqueiro).</td>
         </tr>
         <tr>
             <td>fl_vende_dose</td>
@@ -329,7 +335,7 @@
             <td>fl_bloqueado</td>
             <td>TINYINT(1)</td>
             <td>Indica se o cliente está impedido de comprar fiado.</td>
-            <td>0 = desbloqueado; 1 = bloqueado. O desbloqueio deve ser autorizado pela gerência.</td>
+            <td>Obrigatório; padrão 1. 0 = desbloqueado; 1 = bloqueado. Todo cliente nasce bloqueado e só é liberado pelo gerente com a procedure sp_autorizar_cliente_fiado, que também define o limite.</td>
         </tr>
         <tr>
             <td>dt_consentimento_lgpd</td>
@@ -470,8 +476,8 @@
         <tr>
             <td>nr_documento_fiscal</td>
             <td>VARCHAR(44)</td>
-            <td>Número ou chave do documento fiscal relacionado à venda.</td>
-            <td>Opcional; preencher quando aplicável.</td>
+            <td>Chave de acesso da NFC-e ou número do cupom fiscal.</td>
+            <td>Opcional; o documento completo fica na tabela Nota_Fiscal (seção 23).</td>
         </tr>
         <tr>
             <td>fl_maioridade_conferida</td>
@@ -480,6 +486,8 @@
             <td>0 = não conferida; 1 = conferida. Para categoria restrita, a venda deve respeitar a legislação.</td>
         </tr>
     </table>
+
+    <p>O documento fiscal completo da venda fica na tabela Nota_Fiscal (seção 23), ligado pela coluna id_venda.</p>
 
     <h2>10. Tabela: Fiado</h2>
 
@@ -568,6 +576,18 @@
             <td>FK para produto; obrigatório.</td>
         </tr>
         <tr>
+            <td>id_lote</td>
+            <td>INT UNSIGNED</td>
+            <td>Lote de onde saiu a unidade vendida.</td>
+            <td>FK para lote; opcional. Obrigatório quando o produto controla validade e o item é UNIDADE; deve ser nulo na venda por DOSE. O lote deve ser do mesmo produto, estar dentro da validade e ter saldo.</td>
+        </tr>
+        <tr>
+            <td>id_garrafa_aberta</td>
+            <td>BIGINT UNSIGNED</td>
+            <td>Garrafa aberta de onde saiu a dose vendida.</td>
+            <td>FK para garrafa_aberta; opcional. Obrigatório quando tp_item = DOSE e nulo quando UNIDADE.</td>
+        </tr>
+        <tr>
             <td>tp_item</td>
             <td>ENUM('UNIDADE','DOSE')</td>
             <td>Tipo de item vendido.</td>
@@ -652,8 +672,14 @@
         <tr>
             <td>id_item_venda</td>
             <td>BIGINT UNSIGNED</td>
-            <td>Item da venda destinado ao fiado.</td>
-            <td>FK para item_venda; obrigatório e único. No modelo atual, a linha é destinada integralmente ao fiado.</td>
+            <td>Linha da venda que teve parte do valor destinada ao fiado.</td>
+            <td>FK para item_venda; obrigatório e único: cada linha aparece no máximo uma vez. A venda precisa ter fiado cadastrado.</td>
+        </tr>
+        <tr>
+            <td>vl_fiado</td>
+            <td>DECIMAL(10,2)</td>
+            <td>Valor desta linha que foi lançado no fiado.</td>
+            <td>Obrigatório; maior que zero e no máximo igual ao subtotal da linha (item_venda.vl_subtotal). A soma dos vl_fiado da venda é o total do fiado.</td>
         </tr>
         <tr>
             <td>dt_lancamento</td>
@@ -971,7 +997,7 @@
             <td>ds_motivo</td>
             <td>VARCHAR(200)</td>
             <td>Motivo ou explicação da movimentação.</td>
-            <td>Opcional; recomendado para perdas e ajustes.</td>
+            <td>Obrigatório para PERDA, AJUSTE_ENTRADA e AJUSTE_SAIDA (restrição CHECK); opcional nos demais tipos. A movimentação não pode ser alterada nem excluída.</td>
         </tr>
         <tr>
             <td>dt_movimentacao</td>
@@ -1028,8 +1054,8 @@
         </tr>
         <tr>
             <td>ds_alteracao</td>
-            <td>TEXT</td>
-            <td>Descrição da alteração ou do evento.</td>
+            <td>JSON</td>
+            <td>Valores antes e depois da alteração ou detalhes do evento.</td>
             <td>Opcional.</td>
         </tr>
         <tr>
@@ -1040,9 +1066,212 @@
         </tr>
     </table>
 
-    <h2>21. Relacionamentos entre as tabelas</h2>
+    <h2>21. Tabela: Garrafa_Aberta</h2>
 
-    <p>As cardinalidades abaixo seguem os relacionamentos declarados no modelo lógico XML enviado.</p>
+    <table border="1">
+        <tr>
+            <th>Atributo</th>
+            <th>Tipo de dado</th>
+            <th>Descrição</th>
+            <th>Regra de negócio associada</th>
+        </tr>
+        <tr>
+            <td>id_garrafa_aberta</td>
+            <td>BIGINT UNSIGNED AUTO_INCREMENT</td>
+            <td>Identificador da garrafa aberta para venda de doses.</td>
+            <td>PK; gerado automaticamente.</td>
+        </tr>
+        <tr>
+            <td>id_lote</td>
+            <td>INT UNSIGNED</td>
+            <td>Lote da garrafa que foi aberta.</td>
+            <td>FK para lote; obrigatório. Não é permitido abrir garrafa de lote vencido ou sem saldo.</td>
+        </tr>
+        <tr>
+            <td>id_produto</td>
+            <td>INT UNSIGNED</td>
+            <td>Produto da garrafa.</td>
+            <td>FK para produto; obrigatório. O produto precisa vender dose (fl_vende_dose = 1).</td>
+        </tr>
+        <tr>
+            <td>id_funcionario</td>
+            <td>INT UNSIGNED</td>
+            <td>Funcionário que abriu a garrafa.</td>
+            <td>FK para funcionario; obrigatório.</td>
+        </tr>
+        <tr>
+            <td>dt_abertura</td>
+            <td>DATETIME</td>
+            <td>Data e hora da abertura.</td>
+            <td>Preenchida automaticamente.</td>
+        </tr>
+        <tr>
+            <td>qt_ml_inicial</td>
+            <td>SMALLINT UNSIGNED</td>
+            <td>Volume inicial da garrafa, em mililitros.</td>
+            <td>Obrigatório; maior que zero. Copiado de produto.qt_ml_garrafa na abertura.</td>
+        </tr>
+        <tr>
+            <td>qt_ml_restante</td>
+            <td>SMALLINT UNSIGNED</td>
+            <td>Volume que ainda resta, em mililitros.</td>
+            <td>Obrigatório; não pode superar o volume inicial nem aumentar depois. Cada dose vendida desconta os mililitros.</td>
+        </tr>
+        <tr>
+            <td>st_garrafa</td>
+            <td>ENUM('ABERTA','ESGOTADA')</td>
+            <td>Situação da garrafa.</td>
+            <td>Obrigatório; padrão ABERTA. Vira ESGOTADA quando o volume chega a zero e não volta.</td>
+        </tr>
+    </table>
+
+    <h2>22. Tabela: Movimentacao_Caixa</h2>
+
+    <table border="1">
+        <tr>
+            <th>Atributo</th>
+            <th>Tipo de dado</th>
+            <th>Descrição</th>
+            <th>Regra de negócio associada</th>
+        </tr>
+        <tr>
+            <td>id_movimentacao_caixa</td>
+            <td>BIGINT UNSIGNED AUTO_INCREMENT</td>
+            <td>Identificador da movimentação financeira do caixa.</td>
+            <td>PK; gerado automaticamente.</td>
+        </tr>
+        <tr>
+            <td>id_caixa</td>
+            <td>INT UNSIGNED</td>
+            <td>Sessão de caixa afetada.</td>
+            <td>FK para caixa; obrigatório. O caixa precisa estar ABERTO.</td>
+        </tr>
+        <tr>
+            <td>id_funcionario</td>
+            <td>INT UNSIGNED</td>
+            <td>Funcionário que registrou a movimentação.</td>
+            <td>FK para funcionario; obrigatório.</td>
+        </tr>
+        <tr>
+            <td>tp_movimento</td>
+            <td>ENUM('SUPRIMENTO','SANGRIA','DESPESA')</td>
+            <td>Entrada ou saída de dinheiro fora das vendas.</td>
+            <td>Obrigatório. SUPRIMENTO soma ao valor esperado; SANGRIA e DESPESA subtraem.</td>
+        </tr>
+        <tr>
+            <td>vl_movimento</td>
+            <td>DECIMAL(10,2)</td>
+            <td>Valor movimentado.</td>
+            <td>Obrigatório; sempre maior que zero.</td>
+        </tr>
+        <tr>
+            <td>ds_motivo</td>
+            <td>VARCHAR(200)</td>
+            <td>Motivo do suprimento, sangria ou despesa.</td>
+            <td>Obrigatório.</td>
+        </tr>
+        <tr>
+            <td>dt_movimentacao</td>
+            <td>DATETIME</td>
+            <td>Data e hora da movimentação.</td>
+            <td>Preenchida automaticamente. A movimentação não pode ser alterada nem excluída.</td>
+        </tr>
+    </table>
+
+    <h2>23. Tabela: Nota_Fiscal</h2>
+
+    <p>Cadastro e controle interno dos documentos fiscais de entrada (ligados a uma compra) e de saída (ligados a uma venda). A tabela só registra o documento: não emite NF-e/NFC-e nem consulta ou autoriza documentos na SEFAZ. Cada compra ou venda tem no máximo um documento.</p>
+
+    <table border="1">
+        <tr>
+            <th>Atributo</th>
+            <th>Tipo de dado</th>
+            <th>Descrição</th>
+            <th>Regra de negócio associada</th>
+        </tr>
+        <tr>
+            <td>id_nota_fiscal</td>
+            <td>BIGINT UNSIGNED</td>
+            <td>Identificador interno do documento fiscal.</td>
+            <td>Chave primária; gerada automaticamente.</td>
+        </tr>
+        <tr>
+            <td>tp_operacao</td>
+            <td>ENUM('ENTRADA','SAIDA')</td>
+            <td>Indica se o documento acompanha uma compra ou uma venda.</td>
+            <td>Obrigatório; ENTRADA exige id_compra e SAIDA exige id_venda.</td>
+        </tr>
+        <tr>
+            <td>tp_modelo</td>
+            <td>ENUM('NF_E','NFC_E','CUPOM_FISCAL','OUTRO')</td>
+            <td>Modelo do documento fiscal.</td>
+            <td>Obrigatório; padrão OUTRO.</td>
+        </tr>
+        <tr>
+            <td>nr_numero</td>
+            <td>VARCHAR(44)</td>
+            <td>Número ou identificador informado no documento.</td>
+            <td>Obrigatório.</td>
+        </tr>
+        <tr>
+            <td>nr_serie</td>
+            <td>VARCHAR(10)</td>
+            <td>Série do documento fiscal, quando aplicável.</td>
+            <td>Opcional.</td>
+        </tr>
+        <tr>
+            <td>cd_chave_acesso</td>
+            <td>CHAR(44)</td>
+            <td>Chave de acesso de 44 dígitos, quando disponível.</td>
+            <td>Opcional; única.</td>
+        </tr>
+        <tr>
+            <td>dt_emissao</td>
+            <td>DATETIME</td>
+            <td>Data e hora de emissão informadas no documento.</td>
+            <td>Opcional.</td>
+        </tr>
+        <tr>
+            <td>vl_total</td>
+            <td>DECIMAL(12,2)</td>
+            <td>Valor total registrado no documento.</td>
+            <td>Obrigatório; não pode ser negativo.</td>
+        </tr>
+        <tr>
+            <td>st_documento</td>
+            <td>ENUM('SEM_VALIDACAO','AUTORIZADA','CANCELADA','DENEGADA')</td>
+            <td>Situação de controle do documento.</td>
+            <td>Obrigatório; padrão SEM_VALIDACAO. A autorização deve ser confirmada fora do banco (SEFAZ).</td>
+        </tr>
+        <tr>
+            <td>ds_observacao</td>
+            <td>VARCHAR(255)</td>
+            <td>Observações sobre o documento fiscal.</td>
+            <td>Opcional.</td>
+        </tr>
+        <tr>
+            <td>id_compra</td>
+            <td>INT UNSIGNED</td>
+            <td>Compra relacionada, para documento de entrada.</td>
+            <td>Chave estrangeira para compra; única; nula para documento de saída.</td>
+        </tr>
+        <tr>
+            <td>id_venda</td>
+            <td>BIGINT UNSIGNED</td>
+            <td>Venda relacionada, para documento de saída.</td>
+            <td>Chave estrangeira para venda; única; nula para documento de entrada.</td>
+        </tr>
+        <tr>
+            <td>dt_cadastro</td>
+            <td>DATETIME</td>
+            <td>Data e hora do registro no sistema.</td>
+            <td>Preenchida automaticamente.</td>
+        </tr>
+    </table>
+
+    <h2>24. Relacionamentos entre as tabelas</h2>
+
+    <p>As cardinalidades abaixo correspondem às 32 chaves estrangeiras do script SQL.</p>
 
     <table border="1">
         <tr>
@@ -1071,32 +1300,44 @@
         <tr><td>funcionario - compra</td><td>funcionario (0,N) : compra (1,1)</td></tr>
         <tr><td>compra - item_compra</td><td>compra (1,N) : item_compra (1,1)</td></tr>
         <tr><td>produto - item_compra</td><td>produto (0,N) : item_compra (1,1)</td></tr>
+        <tr><td>funcionario - log_acesso</td><td>funcionario (0,N) : log_acesso (0,1)</td></tr>
+        <tr><td>lote - item_venda</td><td>lote (0,N) : item_venda (0,1)</td></tr>
+        <tr><td>garrafa_aberta - item_venda</td><td>garrafa_aberta (0,N) : item_venda (0,1)</td></tr>
+        <tr><td>lote - garrafa_aberta</td><td>lote (0,N) : garrafa_aberta (1,1)</td></tr>
+        <tr><td>produto - garrafa_aberta</td><td>produto (0,N) : garrafa_aberta (1,1)</td></tr>
+        <tr><td>funcionario - garrafa_aberta</td><td>funcionario (0,N) : garrafa_aberta (1,1)</td></tr>
+        <tr><td>caixa - movimentacao_caixa</td><td>caixa (0,N) : movimentacao_caixa (1,1)</td></tr>
+        <tr><td>funcionario - movimentacao_caixa</td><td>funcionario (0,N) : movimentacao_caixa (1,1)</td></tr>
+        <tr><td>compra - nota_fiscal</td><td>compra (0,1) : nota_fiscal (0,1); documento de entrada</td></tr>
+        <tr><td>venda - nota_fiscal</td><td>venda (0,1) : nota_fiscal (0,1); documento de saída</td></tr>
     </table>
 
-    <h2>22. Regras gerais do sistema</h2>
+    <h2>25. Regras gerais do sistema</h2>
 
     <ul>
         <li>O fiado é permitido somente para clientes conhecidos e autorizados pela adega. O cliente deve estar desbloqueado e possuir limite disponível suficiente para a operação.</li>
 
         <li>O valor total dos pagamentos de uma venda deve corresponder ao valor total da venda. Quando houver pagamento dividido, cada forma deve registrar somente a parcela correspondente.</li>
 
-        <li>O atributo item_fiado.id_item_venda identifica uma linha de venda destinada integralmente ao fiado. O modelo atual não representa uma parte do valor de uma mesma linha no fiado.</li>
+        <li>O atributo item_fiado.id_item_venda identifica a linha da venda que teve valor lançado no fiado e item_fiado.vl_fiado diz quanto daquela linha foi lançado (no máximo o subtotal da linha). A soma dos vl_fiado da venda é igual ao total do fiado.</li>
 
         <li>Produtos de categorias restritas exigem conferência de maioridade e cumprimento da legislação aplicável.</li>
 
-        <li>Lotes vencidos não devem ser comercializados. O controle deve considerar a data de validade do lote.</li>
+        <li>Lotes vencidos não podem ser comercializados: o trigger de item_venda e a procedure de abertura de garrafa recusam lote vencido.</li>
 
-        <li>O saldo de estoque deve ser atualizado por movimentações registradas, mantendo histórico de entradas, saídas, perdas e ajustes.</li>
+        <li>O saldo de estoque e o saldo do lote só mudam por movimentações registradas (trigger), mantendo histórico de entradas, saídas, perdas e ajustes. Movimentações, itens de venda, pagamentos e itens de fiado não podem ser alterados nem excluídos.</li>
 
-        <li>O fechamento do caixa deve comparar o valor esperado com o valor contado, registrando diferenças e justificativas.</li>
+        <li>O fechamento do caixa (procedure sp_fechar_caixa) calcula o valor esperado: troco inicial, mais vendas e recebimentos de fiado em dinheiro, mais suprimentos, menos sangrias e despesas. Compara com o valor contado e registra a diferença e a justificativa.</li>
+
+        <li>Cada documento fiscal registrado em nota_fiscal é de entrada (ligado a uma compra) ou de saída (ligado a uma venda), nunca aos dois; cada compra ou venda tem no máximo um documento e a chave de acesso não se repete. O banco só registra o documento: a emissão e a autorização na SEFAZ são feitas fora dele, e os documentos migrados entram como SEM_VALIDACAO.</li>
 
         <li>O acesso a dados pessoais deve respeitar a LGPD, com acesso limitado às finalidades necessárias e proteção das informações.</li>
     </ul>
 
-    <h2>23. Observações sobre o modelo</h2>
+    <h2>26. Observações sobre o modelo</h2>
 
     <ul>
-        <li>O modelo lógico XML enviado possui 19 tabelas, incluindo log_acesso, que é uma tabela técnica de auditoria.</li>
+        <li>O banco possui 22 tabelas: as 19 entidades de negócio (as 18 anteriores mais nota_fiscal) e as tabelas de apoio log_acesso (auditoria), garrafa_aberta (volume das garrafas abertas) e movimentacao_caixa (suprimentos, sangrias e despesas).</li>
 
         <li>O relacionamento entre produto e estoque é 1:1, pois estoque.id_produto é único.</li>
 
@@ -1104,9 +1345,9 @@
 
         <li>O atributo vl_diferenca é calculado a partir de vl_contado menos vl_esperado.</li>
 
-        <li>As cardinalidades listadas reproduzem o XML fornecido. O diagrama visual do brModelo deve representar os mesmos relacionamentos.</li>
+        <li>As cardinalidades listadas correspondem às 32 chaves estrangeiras do script SQL. O diagrama do brModelo deve representar os mesmos relacionamentos.</li>
 
-        <li>Os tipos de dados devem ser conferidos com o script SQL utilizado na entrega. Se o SQL for alterado, este dicionário também deverá ser atualizado.</li>
+        <li>Os tipos de dados foram conferidos por programa com o script SQL (docs/script.sql, versão 2.0). Se o SQL for alterado, este dicionário também deverá ser atualizado.</li>
     </ul>
 
 </body>
