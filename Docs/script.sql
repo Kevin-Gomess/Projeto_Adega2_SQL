@@ -1,8 +1,35 @@
+-- =====================================================================
+-- ADEGA - SCRIPT CONSOLIDADO
+--
+-- Este arquivo reúne a estrutura do banco, as consultas e os exemplos
+-- básicos que antes estavam em arquivos separados.
+--
+-- ORDEM DE EXECUÇÃO:
+-- 1) Execute primeiro somente a PARTE 1 - ESTRUTURA DO BANCO (até o
+--    marcador FIM DA PARTE 1).
+-- 2) Execute o arquivo massa_de_dados.sql para inserir os dados.
+-- 3) Depois, execute a PARTE 2 (consultas) e a PARTE 3 (exemplos/testes).
+--    Os testes identificados como ERRO devem realmente apresentar erro.
+--    Na PARTE 3, execute os testes individualmente (ou configure o cliente SQL
+--    para continuar após erros), pois alguns comandos falham de propósito.
+--
+-- Execute a PARTE 1 em um schema novo/vazio: o script não apaga tabelas
+-- antigas e não foi feito para recriar a estrutura por cima de uma já existente.
+-- Não execute o arquivo inteiro de uma vez em um banco vazio: as consultas
+-- e vários testes dependem dos registros inseridos pela massa de dados.
+-- =====================================================================
+
+-- =====================================================================
+-- PARTE 1 - ESTRUTURA DO BANCO (tabelas, triggers e procedures)
+-- Antes de cada tabela há dois comentários: sua função e seu objetivo.
+-- =====================================================================
 -- ====================================================================
--
 CREATE DATABASE IF NOT EXISTS adega DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 USE adega;
 
+-- Tabela CATEGORIA
+-- Função: Organiza os produtos da adega em grupos, como bebidas, cigarros e petiscos.
+-- Objetivo: Permitir a classificação dos produtos e indicar quando uma categoria exige conferência de maioridade.
 CREATE TABLE categoria (
   id_categoria INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador da categoria',
   nm_categoria VARCHAR(60) NOT NULL COMMENT 'Nome da categoria',
@@ -11,6 +38,9 @@ CREATE TABLE categoria (
   UNIQUE KEY uq_categoria_nm_categoria (nm_categoria)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Agrupa os produtos da adega e define se a venda é restrita a maiores de 18 anos.';
 
+-- Tabela PRODUTO
+-- Função: Armazena o cadastro e as características comerciais de cada produto vendido pela adega.
+-- Objetivo: Manter nome, categoria, código de barras, preços e regras de venda por unidade ou dose.
 CREATE TABLE produto (
   id_produto INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador do produto',
   id_categoria INT UNSIGNED NOT NULL COMMENT 'Categoria do produto',
@@ -31,6 +61,9 @@ CREATE TABLE produto (
   CONSTRAINT chk_produto_dose CHECK (fl_vende_dose = 0 OR (qt_ml_garrafa IS NOT NULL AND qt_ml_dose IS NOT NULL AND vl_dose IS NOT NULL AND qt_ml_dose <= qt_ml_garrafa))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Item comercializado: bebida, cigarro, petisco ou conveniência. Pode ser vendido fechado (unidade) ou em doses.';
 
+-- Tabela ESTOQUE
+-- Função: Registra o saldo atual e a quantidade mínima de cada produto.
+-- Objetivo: Acompanhar a disponibilidade das mercadorias e indicar quando é necessário repor o estoque.
 CREATE TABLE estoque (
   id_estoque INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador do registro de estoque',
   id_produto INT UNSIGNED NOT NULL COMMENT 'Produto controlado',
@@ -44,6 +77,9 @@ CREATE TABLE estoque (
   CONSTRAINT chk_estoque_qt_atual CHECK (qt_atual >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Saldo atual de cada produto (relação 1:1 com PRODUTO). Só muda por meio de MOVIMENTACAO_ESTOQUE.';
 
+-- Tabela FUNCIONARIO
+-- Função: Armazena os dados dos funcionários que utilizam o sistema.
+-- Objetivo: Identificar quem realiza as operações e controlar os perfis de acesso de atendente e gerente.
 CREATE TABLE funcionario (
   id_funcionario INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador do funcionário',
   nm_funcionario VARCHAR(100) NOT NULL COMMENT 'Nome completo',
@@ -58,6 +94,9 @@ CREATE TABLE funcionario (
   UNIQUE KEY uq_funcionario_ds_login (ds_login)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Pessoa da equipe (3 a 4 funcionários) que usa o sistema. Perfis: atendente e gerente.';
 
+-- Tabela ESCALA
+-- Função: Registra os turnos, horários e funções de trabalho dos funcionários.
+-- Objetivo: Organizar a jornada da equipe e permitir consultar quem trabalhou em cada período.
 CREATE TABLE escala (
   id_escala INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador do turno',
   id_funcionario INT UNSIGNED NOT NULL COMMENT 'Funcionário escalado',
@@ -72,6 +111,9 @@ CREATE TABLE escala (
   CONSTRAINT chk_escala_horario CHECK (hr_fim <> hr_inicio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Turno de trabalho de um funcionário em um dia, com a função que ele exerce.';
 
+-- Tabela CLIENTE
+-- Função: Armazena os dados cadastrais dos clientes, incluindo informações necessárias ao controle de fiado.
+-- Objetivo: Identificar clientes e apoiar a análise de autorização, limite e cobrança de compras a prazo, respeitando a LGPD.
 CREATE TABLE cliente (
   id_cliente INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador do cliente',
   nm_cliente VARCHAR(100) NOT NULL COMMENT 'Nome completo',
@@ -88,6 +130,9 @@ CREATE TABLE cliente (
   CONSTRAINT chk_cliente_limite CHECK (vl_limite_fiado >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Cliente cadastrado para comprar fiado. Reúne dados pessoais protegidos pela LGPD.';
 
+-- Tabela CAIXA
+-- Função: Registra cada sessão de caixa, desde a abertura até o fechamento.
+-- Objetivo: Controlar o responsável, o troco inicial e a conferência dos valores esperados e contados.
 CREATE TABLE caixa (
   id_caixa INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador da sessão de caixa',
   id_funcionario INT UNSIGNED NOT NULL COMMENT 'Funcionário responsável pelo caixa',
@@ -105,6 +150,9 @@ CREATE TABLE caixa (
   CONSTRAINT chk_caixa_fechamento CHECK ((st_caixa = 'ABERTO' AND dt_fechamento IS NULL) OR (st_caixa = 'FECHADO' AND dt_fechamento IS NOT NULL AND vl_contado IS NOT NULL))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Sessão de caixa, da abertura ao fechamento, com a conferência do dinheiro.';
 
+-- Tabela VENDA
+-- Função: Armazena os dados gerais de cada venda realizada no balcão.
+-- Objetivo: Registrar data, funcionário, caixa, valores, situação e confirmação de maioridade quando necessária.
 CREATE TABLE venda (
   id_venda BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador da venda',
   id_funcionario INT UNSIGNED NOT NULL COMMENT 'Funcionário que realizou a venda',
@@ -122,6 +170,9 @@ CREATE TABLE venda (
   CONSTRAINT chk_venda_valores CHECK (vl_desconto >= 0 AND vl_total >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Venda feita no balcão, ligada ao funcionário e ao caixa aberto.';
 
+-- Tabela FIADO
+-- Função: Registra uma conta a prazo originada por uma venda e vinculada a um cliente.
+-- Objetivo: Acompanhar vencimento, valor total, pagamentos recebidos e saldo devedor do cliente.
 CREATE TABLE fiado (
   id_fiado INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador do fiado',
   id_venda BIGINT UNSIGNED NOT NULL COMMENT 'Venda original que gerou esta conta de fiado',
@@ -140,6 +191,9 @@ CREATE TABLE fiado (
   CONSTRAINT chk_fiado_valores CHECK (vl_total > 0 AND vl_pago >= 0 AND vl_pago <= vl_total)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Conta de fiado de uma única venda, aberta para um cliente, com prazo e saldo.';
 
+-- Tabela ITEM_VENDA
+-- Função: Detalha os produtos, quantidades e preços que compõem cada venda.
+-- Objetivo: Guardar os itens vendidos e o preço praticado no momento da compra, incluindo lote ou garrafa quando aplicável.
 CREATE TABLE item_venda (
   id_item_venda BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador do item da venda',
   id_venda BIGINT UNSIGNED NOT NULL COMMENT 'Venda a que o item pertence',
@@ -156,6 +210,9 @@ CREATE TABLE item_venda (
   CONSTRAINT chk_item_venda_qt CHECK (qt_item > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Produto vendido em uma venda, com quantidade e preço do momento.';
 
+-- Tabela PAGAMENTO
+-- Função: Registra cada pagamento associado a uma venda.
+-- Objetivo: Informar quanto foi pago em cada forma de pagamento e permitir que uma venda seja quitada por mais de uma forma.
 CREATE TABLE pagamento (
   id_pagamento BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador do pagamento',
   id_venda BIGINT UNSIGNED NOT NULL COMMENT 'Venda paga',
@@ -168,6 +225,9 @@ CREATE TABLE pagamento (
   CONSTRAINT chk_pagamento_valor CHECK (vl_pago > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Forma de pagamento de uma venda. Uma venda pode ter vários pagamentos (pagamento dividido). Na forma FIADO, o valor é a parcela que ficou na conta de fiado da venda.';
 
+-- Tabela ITEM_FIADO
+-- Função: Identifica os itens da venda e os valores de cada item destinados ao fiado.
+-- Objetivo: Detalhar quais produtos e parcelas compõem a dívida vinculada à venda.
 CREATE TABLE item_fiado (
   id_item_fiado BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador do item do fiado',
   id_item_venda BIGINT UNSIGNED NOT NULL COMMENT 'Linha da venda que possui uma parte do valor destinada ao fiado',
@@ -179,6 +239,9 @@ CREATE TABLE item_fiado (
   CONSTRAINT chk_item_fiado_valor CHECK (vl_fiado > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Registra quanto de cada item da venda foi destinado ao fiado, permitindo pagamento dividido.';
 
+-- Tabela PAGAMENTO_FIADO
+-- Função: Registra os recebimentos feitos para quitar, total ou parcialmente, uma conta de fiado.
+-- Objetivo: Controlar cada abatimento da dívida, sua forma de pagamento e o caixa que recebeu o valor.
 CREATE TABLE pagamento_fiado (
   id_pagamento_fiado BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador do pagamento do fiado',
   id_fiado INT UNSIGNED NOT NULL COMMENT 'Fiado abatido',
@@ -192,6 +255,9 @@ CREATE TABLE pagamento_fiado (
   CONSTRAINT chk_pagamento_fiado_valor CHECK (vl_pago > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Pagamento (total ou parcial) recebido para abater um fiado.';
 
+-- Tabela FORNECEDOR
+-- Função: Armazena o cadastro das empresas que fornecem mercadorias à adega.
+-- Objetivo: Manter os dados de contato e a modalidade de fornecimento para organizar as compras.
 CREATE TABLE fornecedor (
   id_fornecedor INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador do fornecedor',
   nm_fornecedor VARCHAR(100) NOT NULL COMMENT 'Razão social ou nome fantasia',
@@ -203,6 +269,9 @@ CREATE TABLE fornecedor (
   UNIQUE KEY uq_fornecedor_nr_cnpj (nr_cnpj)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Empresa que vende mercadoria para a adega, com entrega ou retirada.';
 
+-- Tabela COMPRA
+-- Função: Registra os pedidos de mercadorias feitos aos fornecedores.
+-- Objetivo: Acompanhar responsável, datas, recebimento, nota fiscal, valor total e situação de cada compra.
 CREATE TABLE compra (
   id_compra INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador da compra',
   id_fornecedor INT UNSIGNED NOT NULL COMMENT 'Fornecedor do pedido',
@@ -219,6 +288,9 @@ CREATE TABLE compra (
   CONSTRAINT fk_compra_id_funcionario FOREIGN KEY (id_funcionario) REFERENCES funcionario (id_funcionario)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Pedido de compra feito a um fornecedor por um funcionário.';
 
+-- Tabela ITEM_COMPRA
+-- Função: Detalha os produtos e as quantidades que fazem parte de cada compra.
+-- Objetivo: Controlar quantidades pedidas e recebidas, custo unitário e conferência de divergências.
 CREATE TABLE item_compra (
   id_item_compra INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador do item da compra',
   id_compra INT UNSIGNED NOT NULL COMMENT 'Compra a que o item pertence',
@@ -236,6 +308,42 @@ CREATE TABLE item_compra (
   CONSTRAINT chk_item_compra_custo CHECK (vl_custo >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Produto pedido em uma compra, com quantidade pedida, recebida e conferência.';
 
+-- Tabela NOTA_FISCAL
+-- Função: Armazena os dados de identificação e controle dos documentos fiscais de entrada e saída.
+-- Objetivo: Relacionar cada documento a uma compra ou venda e permitir consultar número, série, chave de acesso, emissão, valor e situação.
+-- Observação: Esta tabela registra documentos; não emite NF-e/NFC-e nem consulta ou autoriza documentos na SEFAZ.
+CREATE TABLE nota_fiscal (
+  id_nota_fiscal BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador interno do documento fiscal',
+  tp_operacao ENUM('ENTRADA','SAIDA') NOT NULL COMMENT 'Indica se o documento acompanha uma compra ou uma venda',
+  tp_modelo ENUM('NF_E','NFC_E','CUPOM_FISCAL','OUTRO') NOT NULL DEFAULT 'OUTRO' COMMENT 'Modelo do documento fiscal',
+  nr_numero VARCHAR(44) NOT NULL COMMENT 'Número ou identificador informado no documento',
+  nr_serie VARCHAR(10) NULL COMMENT 'Série do documento fiscal, quando aplicável',
+  cd_chave_acesso CHAR(44) NULL COMMENT 'Chave de acesso de 44 dígitos, quando disponível',
+  dt_emissao DATETIME NULL COMMENT 'Data e hora de emissão informadas no documento',
+  vl_total DECIMAL(12,2) NOT NULL COMMENT 'Valor total registrado no documento',
+  st_documento ENUM('SEM_VALIDACAO','AUTORIZADA','CANCELADA','DENEGADA') NOT NULL DEFAULT 'SEM_VALIDACAO' COMMENT 'Situação de controle; autorização deve ser confirmada externamente',
+  ds_observacao VARCHAR(255) NULL COMMENT 'Observações sobre o documento fiscal',
+  id_compra INT UNSIGNED NULL COMMENT 'Compra relacionada, para documento de entrada',
+  id_venda BIGINT UNSIGNED NULL COMMENT 'Venda relacionada, para documento de saída',
+  dt_cadastro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Data e hora do registro no sistema',
+  PRIMARY KEY (id_nota_fiscal),
+  UNIQUE KEY uq_nota_fiscal_compra (id_compra),
+  UNIQUE KEY uq_nota_fiscal_venda (id_venda),
+  UNIQUE KEY uq_nota_fiscal_chave_acesso (cd_chave_acesso),
+  KEY idx_nota_fiscal_operacao_data (tp_operacao, dt_emissao),
+  CONSTRAINT fk_nota_fiscal_id_compra FOREIGN KEY (id_compra) REFERENCES compra (id_compra),
+  CONSTRAINT fk_nota_fiscal_id_venda FOREIGN KEY (id_venda) REFERENCES venda (id_venda),
+  CONSTRAINT chk_nota_fiscal_origem CHECK (
+    (tp_operacao = 'ENTRADA' AND id_compra IS NOT NULL AND id_venda IS NULL)
+    OR
+    (tp_operacao = 'SAIDA' AND id_compra IS NULL AND id_venda IS NOT NULL)
+  ),
+  CONSTRAINT chk_nota_fiscal_valor CHECK (vl_total >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Cadastro e controle interno de documentos fiscais vinculados a compras ou vendas.';
+
+-- Tabela LOTE
+-- Função: Armazena os lotes recebidos de produtos que possuem controle de validade.
+-- Objetivo: Rastrear a origem, a data de vencimento e a quantidade disponível de cada lote.
 CREATE TABLE lote (
   id_lote INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador do lote',
   id_item_compra INT UNSIGNED NOT NULL COMMENT 'Item de compra que originou o lote',
@@ -248,6 +356,9 @@ CREATE TABLE lote (
   CONSTRAINT fk_lote_id_item_compra FOREIGN KEY (id_item_compra) REFERENCES item_compra (id_item_compra)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Lote recebido de produto com validade. Permite controlar vencimento e vender primeiro o que vence antes.';
 
+-- Tabela MOVIMENTACAO_ESTOQUE
+-- Função: Registra as entradas, saídas, perdas, devoluções e ajustes do estoque.
+-- Objetivo: Manter o histórico das alterações de quantidade para permitir controle e auditoria do estoque.
 CREATE TABLE movimentacao_estoque (
   id_movimentacao BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador da movimentação',
   id_produto INT UNSIGNED NOT NULL COMMENT 'Produto movimentado',
@@ -268,6 +379,9 @@ CREATE TABLE movimentacao_estoque (
 
 
 
+-- Tabela GARRAFA_ABERTA
+-- Função: Controla as garrafas abertas que são utilizadas para vender doses.
+-- Objetivo: Acompanhar o volume inicial e restante de cada garrafa e identificar sua situação.
 CREATE TABLE garrafa_aberta (
   id_garrafa_aberta BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador da garrafa aberta para venda de doses',
   id_lote INT UNSIGNED NOT NULL COMMENT 'Lote da garrafa aberta',
@@ -285,6 +399,9 @@ CREATE TABLE garrafa_aberta (
   CONSTRAINT chk_garrafa_volume CHECK (qt_ml_inicial > 0 AND qt_ml_restante <= qt_ml_inicial)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Controla o volume restante de garrafas abertas para venda de doses.';
 
+-- Tabela MOVIMENTACAO_CAIXA
+-- Função: Registra entradas e saídas de dinheiro do caixa que não são pagamentos diretos de vendas.
+-- Objetivo: Controlar suprimentos, sangrias e despesas para apoiar a conferência e o fechamento do caixa.
 CREATE TABLE movimentacao_caixa (
   id_movimentacao_caixa BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador da movimentação financeira do caixa',
   id_caixa INT UNSIGNED NOT NULL COMMENT 'Sessão de caixa afetada',
@@ -300,6 +417,9 @@ CREATE TABLE movimentacao_caixa (
   CONSTRAINT chk_mov_caixa_valor CHECK (vl_movimento > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Registra suprimentos, sangrias e despesas para calcular o fechamento do caixa.';
 
+-- Tabela LOG_ACESSO
+-- Função: Armazena eventos e operações realizados pelos usuários no sistema.
+-- Objetivo: Permitir auditoria de acessos e alterações, identificando o funcionário, a tabela e o registro envolvidos, inclusive para apoio à LGPD.
 CREATE TABLE log_acesso (
   id_log BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador do registro de log',
   id_funcionario INT UNSIGNED NULL COMMENT 'Funcionário que gerou o evento',
@@ -970,3 +1090,808 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+
+-- =====================================================================
+-- FIM DA PARTE 1 - ESTRUTURA DO BANCO
+-- =====================================================================
+
+-- =====================================================================
+-- PARTE 2 - CONSULTAS DO BANCO (antigo arquivo criacao_banco.sql)
+-- Execute esta parte depois de carregar massa_de_dados.sql.
+-- =====================================================================
+
+-- =====================================================================
+USE adega;
+SET @hoje   = '2026-11-01';
+SET @inicio = '2026-10-01';   
+SET @fim    = '2026-11-01';   
+
+-- =====================================================================
+-- PARTE 1 - SELECT COM JOIN
+-- =====================================================================
+
+-- J01 — Quais itens foram vendidos nas últimas 10 vendas, quem vendeu e quanto?
+-- Atende: P1 (registro de cada produto vendido)
+SELECT v.id_venda, v.dt_venda, f.nm_funcionario AS vendedor, p.nm_produto,
+       iv.tp_item, iv.qt_item, iv.vl_unitario, iv.vl_subtotal
+FROM venda AS v
+JOIN funcionario AS f ON f.id_funcionario = v.id_funcionario
+JOIN item_venda  AS iv ON iv.id_venda = v.id_venda
+JOIN produto     AS p ON p.id_produto = iv.id_produto
+WHERE v.id_venda > (SELECT MAX(id_venda) - 10 FROM venda)
+ORDER BY v.id_venda DESC, iv.id_item_venda;
+
+-- J02 — Como está o estoque de cada produto, com a categoria e a localização?
+-- Atende: P2 e P4 (saber o que existe no estoque)
+SELECT c.nm_categoria, p.nm_produto, e.qt_atual, e.qt_minima, e.ds_localizacao
+FROM produto AS p
+JOIN categoria AS c ON c.id_categoria = p.id_categoria
+JOIN estoque   AS e ON e.id_produto = p.id_produto
+ORDER BY c.nm_categoria, p.nm_produto;
+
+-- J03 — O que foi comprado de cada fornecedor na compra mais recente de cada um?
+-- Atende: compras e fornecedores
+SELECT fo.nm_fornecedor, c.id_compra, c.dt_pedido, c.st_compra,
+       p.nm_produto, ic.qt_pedida, ic.qt_recebida, ic.vl_custo
+FROM compra AS c
+JOIN fornecedor  AS fo ON fo.id_fornecedor = c.id_fornecedor
+JOIN item_compra AS ic ON ic.id_compra = c.id_compra
+JOIN produto     AS p  ON p.id_produto = ic.id_produto
+WHERE c.id_compra = (SELECT MAX(c2.id_compra) FROM compra AS c2 WHERE c2.id_fornecedor = c.id_fornecedor)
+ORDER BY fo.nm_fornecedor, p.nm_produto;
+
+-- J04 — Quais clientes têm fiado em aberto e de qual venda ele veio?
+-- Atende: P5 (controle do fiado)
+SELECT cl.nm_cliente, f.id_fiado, f.id_venda, f.dt_abertura, f.dt_vencimento,
+       f.vl_total, f.vl_pago, (f.vl_total - f.vl_pago) AS saldo
+FROM fiado AS f
+JOIN cliente AS cl ON cl.id_cliente = f.id_cliente
+WHERE f.st_fiado = 'ABERTO'
+ORDER BY f.dt_vencimento;
+
+-- J05 — Quais produtos entraram em cada fiado (linhas da venda marcadas)?
+-- Atende: P5 e RN04 (produto, quantidade e preço ficam em item_venda)
+SELECT f.id_fiado, cl.nm_cliente, p.nm_produto, iv.qt_item, iv.vl_unitario, iv.vl_subtotal
+FROM fiado AS f
+JOIN cliente     AS cl ON cl.id_cliente = f.id_cliente
+JOIN item_venda  AS iv ON iv.id_venda = f.id_venda
+JOIN item_fiado  AS fi ON fi.id_item_venda = iv.id_item_venda
+JOIN produto     AS p  ON p.id_produto = iv.id_produto
+WHERE f.id_fiado <= 5
+ORDER BY f.id_fiado, iv.id_item_venda;
+
+-- J06 — Quem trabalhou em cada dia da última semana e em qual função?
+-- Atende: escala dos funcionários
+SELECT e.dt_turno, fu.nm_funcionario, fu.tp_cargo, e.ds_funcao, e.hr_inicio, e.hr_fim
+FROM escala AS e
+JOIN funcionario AS fu ON fu.id_funcionario = e.id_funcionario
+WHERE e.dt_turno BETWEEN DATE_ADD(@hoje, INTERVAL -6 DAY) AND @hoje
+ORDER BY e.dt_turno, fu.nm_funcionario;
+
+-- J07 — Quais garrafas foram abertas para vender doses, por quem e quanto ainda resta?
+-- Atende: P1 e RN06 (abertura de garrafa e venda por dose)
+SELECT g.id_garrafa_aberta, p.nm_produto, f.nm_funcionario AS aberta_por, g.dt_abertura,
+       g.qt_ml_inicial, g.qt_ml_restante, g.st_garrafa
+FROM garrafa_aberta AS g
+JOIN produto AS p ON p.id_produto = g.id_produto
+JOIN funcionario AS f ON f.id_funcionario = g.id_funcionario
+ORDER BY g.dt_abertura;
+
+-- =====================================================================
+-- PARTE 2 - CONSULTAS GERENCIAIS
+-- =====================================================================
+
+-- G01 — Qual o faturamento e o número de vendas por mês?
+-- Atende: P1 e KPI01 (faturamento). Só vendas concluídas.
+SELECT DATE_FORMAT(v.dt_venda, '%Y-%m') AS mes,
+       COUNT(*) AS vendas,
+       SUM(v.vl_total) AS faturamento
+FROM venda AS v
+WHERE v.st_venda = 'CONCLUIDA'
+GROUP BY DATE_FORMAT(v.dt_venda, '%Y-%m')
+ORDER BY mes;
+
+-- G01b — E por dia, nos últimos 14 dias?
+-- Atende: P1 e KPI01
+SELECT DATE(v.dt_venda) AS dia, COUNT(*) AS vendas, SUM(v.vl_total) AS faturamento
+FROM venda AS v
+WHERE v.st_venda = 'CONCLUIDA'
+  AND DATE(v.dt_venda) > DATE_ADD(@hoje, INTERVAL -14 DAY)
+GROUP BY DATE(v.dt_venda)
+ORDER BY dia;
+
+-- G02 — Qual o ticket médio (valor médio por venda) em cada mês?
+-- Atende: KPI02 (ticket médio)
+SELECT DATE_FORMAT(v.dt_venda, '%Y-%m') AS mes,
+       COUNT(*) AS vendas,
+       ROUND(SUM(v.vl_total) / COUNT(*), 2) AS ticket_medio
+FROM venda AS v
+WHERE v.st_venda = 'CONCLUIDA'
+GROUP BY DATE_FORMAT(v.dt_venda, '%Y-%m')
+ORDER BY mes;
+
+-- G03 — Quanto cada forma de pagamento representa no total das vendas concluídas?
+-- Atende: P1 (o que antes só aparecia como "recebimento")
+SELECT p.tp_forma,
+       COUNT(*) AS pagamentos,
+       SUM(p.vl_pago) AS valor,
+       ROUND(100 * SUM(p.vl_pago) / (SELECT SUM(p2.vl_pago)
+                                      FROM pagamento AS p2
+                                      JOIN venda AS v2 ON v2.id_venda = p2.id_venda
+                                      WHERE v2.st_venda = 'CONCLUIDA'), 1) AS percentual
+FROM pagamento AS p
+JOIN venda AS v ON v.id_venda = p.id_venda
+WHERE v.st_venda = 'CONCLUIDA'
+GROUP BY p.tp_forma
+ORDER BY valor DESC;
+
+-- G04 — Quais são os 10 produtos que mais vendem no período (de @inicio até @fim)?
+-- Atende: P3 e KPI03 (produtos mais vendidos)
+SELECT p.nm_produto, c.nm_categoria,
+       SUM(CASE WHEN iv.tp_item = 'UNIDADE' THEN iv.qt_item ELSE 0 END) AS unidades,
+       SUM(CASE WHEN iv.tp_item = 'DOSE'    THEN iv.qt_item ELSE 0 END) AS doses,
+       SUM(iv.vl_subtotal) AS receita
+FROM item_venda AS iv
+JOIN venda     AS v ON v.id_venda = iv.id_venda
+JOIN produto   AS p ON p.id_produto = iv.id_produto
+JOIN categoria AS c ON c.id_categoria = p.id_categoria
+WHERE v.st_venda = 'CONCLUIDA' AND DATE(v.dt_venda) BETWEEN @inicio AND @fim
+GROUP BY p.id_produto, p.nm_produto, c.nm_categoria
+ORDER BY receita DESC
+LIMIT 10;
+
+-- G05 — Quais produtos estão no mínimo ou abaixo dele hoje?
+-- Atende: P4 e KPI04 (produtos que estão acabando)
+SELECT p.nm_produto, c.nm_categoria, e.qt_atual, e.qt_minima,
+       (e.qt_minima - e.qt_atual) AS falta_para_o_minimo
+FROM estoque AS e
+JOIN produto   AS p ON p.id_produto = e.id_produto
+JOIN categoria AS c ON c.id_categoria = p.id_categoria
+WHERE e.qt_atual <= e.qt_minima AND p.fl_ativo = 1
+ORDER BY falta_para_o_minimo DESC, p.nm_produto;
+
+-- G06 — Qual o saldo de fiado em aberto de cada cliente e quanto do limite já foi usado?
+-- Atende: P5 e KPI05 (saldo de fiado em aberto)
+SELECT cl.nm_cliente, cl.vl_limite_fiado,
+       SUM(f.vl_total - f.vl_pago) AS saldo_devedor,
+       ROUND(100 * SUM(f.vl_total - f.vl_pago) / cl.vl_limite_fiado, 1) AS percentual_do_limite
+FROM cliente AS cl
+JOIN fiado AS f ON f.id_cliente = cl.id_cliente
+WHERE f.st_fiado = 'ABERTO'
+GROUP BY cl.id_cliente, cl.nm_cliente, cl.vl_limite_fiado
+ORDER BY saldo_devedor DESC;
+
+-- G07 — Quais fiados estão vencidos, há quantos dias e de quem?
+-- Atende: P5 e KPI06 (fiado vencido). Vencido = em aberto e com dt_vencimento anterior a hoje.
+SELECT cl.nm_cliente, f.id_fiado, f.dt_vencimento,
+       DATEDIFF(@hoje, f.dt_vencimento) AS dias_de_atraso,
+       (f.vl_total - f.vl_pago) AS saldo, cl.fl_bloqueado
+FROM fiado AS f
+JOIN cliente AS cl ON cl.id_cliente = f.id_cliente
+WHERE f.st_fiado = 'ABERTO' AND f.dt_vencimento < @hoje
+ORDER BY dias_de_atraso DESC;
+
+-- G08 — Quanto foi perdido por mês, por categoria (quebra, avaria, vencimento)?
+-- Atende: KPI07 (perdas e quebras). Valor calculado ao preço de venda atual do produto.
+SELECT DATE_FORMAT(m.dt_movimentacao, '%Y-%m') AS mes, c.nm_categoria,
+       SUM(m.qt_movimentada) AS unidades_perdidas,
+       SUM(m.qt_movimentada * p.vl_venda) AS valor_a_preco_de_venda
+FROM movimentacao_estoque AS m
+JOIN produto   AS p ON p.id_produto = m.id_produto
+JOIN categoria AS c ON c.id_categoria = p.id_categoria
+WHERE m.tp_movimento = 'PERDA'
+GROUP BY DATE_FORMAT(m.dt_movimentacao, '%Y-%m'), c.nm_categoria
+ORDER BY mes, valor_a_preco_de_venda DESC;
+
+-- G09 — Quais caixas fecharam com diferença e de quanto, e quem estava responsável?
+-- Atende: KPI08 (diferença de caixa)
+SELECT cx.id_caixa, DATE(cx.dt_abertura) AS dia, fu.nm_funcionario AS responsavel,
+       cx.vl_esperado, cx.vl_contado, cx.vl_diferenca, cx.ds_observacao
+FROM caixa AS cx
+JOIN funcionario AS fu ON fu.id_funcionario = cx.id_funcionario
+WHERE cx.st_caixa = 'FECHADO' AND cx.vl_diferenca <> 0
+ORDER BY cx.dt_abertura;
+
+-- G09b — Resumo mensal das diferenças de caixa
+-- Atende: KPI08
+SELECT DATE_FORMAT(cx.dt_abertura, '%Y-%m') AS mes,
+       COUNT(*) AS caixas_fechados,
+       SUM(CASE WHEN cx.vl_diferenca <> 0 THEN 1 ELSE 0 END) AS com_diferenca,
+       SUM(cx.vl_diferenca) AS soma_das_diferencas
+FROM caixa AS cx
+WHERE cx.st_caixa = 'FECHADO'
+GROUP BY DATE_FORMAT(cx.dt_abertura, '%Y-%m')
+ORDER BY mes;
+
+-- G10 — Quanto foi comprado de cada fornecedor por mês?
+-- Atende: compras e fornecedores
+SELECT fo.nm_fornecedor, DATE_FORMAT(c.dt_pedido, '%Y-%m') AS mes,
+       COUNT(*) AS compras, SUM(c.vl_total) AS valor_comprado,
+       SUM(CASE WHEN c.st_compra = 'RECEBIDA_PARCIAL' THEN 1 ELSE 0 END) AS recebidas_parcialmente
+FROM compra AS c
+JOIN fornecedor AS fo ON fo.id_fornecedor = c.id_fornecedor
+WHERE c.st_compra <> 'CANCELADA'
+GROUP BY fo.id_fornecedor, fo.nm_fornecedor, DATE_FORMAT(c.dt_pedido, '%Y-%m')
+ORDER BY fo.nm_fornecedor, mes;
+
+-- G11 — Quais lotes ainda com saldo estão vencidos ou vencem em até 30 dias?
+-- Atende: RN18 e RN19 (controle de validade por lote)
+SELECT p.nm_produto, l.nr_lote, l.dt_validade, l.qt_disponivel,
+       DATEDIFF(l.dt_validade, @hoje) AS dias_para_vencer,
+       CASE WHEN l.dt_validade < @hoje THEN 'VENCIDO' ELSE 'VENCE EM ATÉ 30 DIAS' END AS situacao
+FROM lote AS l
+JOIN item_compra AS ic ON ic.id_item_compra = l.id_item_compra
+JOIN produto     AS p  ON p.id_produto = ic.id_produto
+WHERE l.qt_disponivel > 0 AND l.dt_validade <= DATE_ADD(@hoje, INTERVAL 30 DAY)
+ORDER BY l.dt_validade, p.nm_produto;
+
+-- G12 — Quanto cada funcionário vendeu?
+-- Atende: BI (desempenho da equipe)
+SELECT fu.nm_funcionario, fu.tp_cargo, COUNT(*) AS vendas, SUM(v.vl_total) AS valor_vendido
+FROM venda AS v
+JOIN funcionario AS fu ON fu.id_funcionario = v.id_funcionario
+WHERE v.st_venda = 'CONCLUIDA'
+GROUP BY fu.id_funcionario, fu.nm_funcionario, fu.tp_cargo
+ORDER BY valor_vendido DESC;
+
+-- G12b — Em quais dias da semana e horários a adega mais vende?
+-- Atende: BI (dias e horários de pico, apoio à escala)
+SELECT DAYOFWEEK(v.dt_venda) AS dia_da_semana_1dom_a_7sab, HOUR(v.dt_venda) AS hora,
+       COUNT(*) AS vendas, SUM(v.vl_total) AS faturamento
+FROM venda AS v
+WHERE v.st_venda = 'CONCLUIDA'
+GROUP BY DAYOFWEEK(v.dt_venda), HOUR(v.dt_venda)
+ORDER BY vendas DESC
+LIMIT 10;
+
+-- G13 — O que entrou e saiu do estoque de cada produto no período, por tipo de movimentação?
+-- Atende: P2 (estoque anotado x estoque real)
+SELECT p.nm_produto,
+       SUM(CASE WHEN m.tp_movimento = 'ENTRADA_COMPRA' THEN m.qt_movimentada ELSE 0 END) AS entradas_compra,
+       SUM(CASE WHEN m.tp_movimento = 'SAIDA_VENDA'    THEN m.qt_movimentada ELSE 0 END) AS saidas_venda,
+       SUM(CASE WHEN m.tp_movimento = 'SAIDA_DOSE'     THEN m.qt_movimentada ELSE 0 END) AS garrafas_para_dose,
+       SUM(CASE WHEN m.tp_movimento = 'PERDA'          THEN m.qt_movimentada ELSE 0 END) AS perdas,
+       SUM(CASE WHEN m.tp_movimento IN ('AJUSTE_ENTRADA','AJUSTE_SAIDA','DEVOLUCAO_FORNECEDOR')
+                THEN m.qt_movimentada ELSE 0 END) AS ajustes_e_devolucoes
+FROM movimentacao_estoque AS m
+JOIN produto AS p ON p.id_produto = m.id_produto
+WHERE DATE(m.dt_movimentacao) BETWEEN @inicio AND @fim
+GROUP BY p.id_produto, p.nm_produto
+ORDER BY saidas_venda DESC
+LIMIT 15;
+
+-- G14 — Quanto entrou e saiu do caixa fora das vendas (suprimento, sangria e despesa) por mês?
+-- Atende: P3 e RN23 (controle de caixa)
+SELECT DATE_FORMAT(dt_movimentacao, '%Y-%m') AS mes, tp_movimento,
+       COUNT(*) AS qtd, SUM(vl_movimento) AS total
+FROM movimentacao_caixa
+GROUP BY DATE_FORMAT(dt_movimentacao, '%Y-%m'), tp_movimento
+ORDER BY mes, tp_movimento;
+
+-- G15 — Quantos eventos de auditoria cada funcionário gerou, por tipo de evento?
+-- Atende: RN30 (auditoria) e RN29 (consultas a dado pessoal ficam registradas)
+SELECT fu.nm_funcionario, l.tp_evento, COUNT(*) AS qtd
+FROM log_acesso AS l
+JOIN funcionario AS fu ON fu.id_funcionario = l.id_funcionario
+GROUP BY fu.nm_funcionario, l.tp_evento
+ORDER BY fu.nm_funcionario, qtd DESC;
+
+-- =====================================================================
+-- CONTROLE DE NOTAS FISCAIS
+-- Os itens e produtos continuam detalhados em ITEM_COMPRA e ITEM_VENDA.
+-- A tabela NOTA_FISCAL guarda os dados gerais do documento e sua ligação à operação.
+
+-- Documentos fiscais de entrada (compras e respectivos fornecedores).
+SELECT nf.id_nota_fiscal, nf.tp_modelo, nf.nr_numero, nf.nr_serie,
+       nf.cd_chave_acesso, nf.dt_emissao, nf.vl_total, nf.st_documento,
+       c.id_compra, f.nm_fornecedor
+  FROM nota_fiscal AS nf
+  JOIN compra AS c ON c.id_compra = nf.id_compra
+  JOIN fornecedor AS f ON f.id_fornecedor = c.id_fornecedor
+ WHERE nf.tp_operacao = 'ENTRADA'
+ ORDER BY nf.id_nota_fiscal;
+
+-- Documentos fiscais de saída (vendas e respectivos caixas/funcionários).
+SELECT nf.id_nota_fiscal, nf.tp_modelo, nf.nr_numero, nf.nr_serie,
+       nf.cd_chave_acesso, nf.dt_emissao, nf.vl_total, nf.st_documento,
+       v.id_venda, v.dt_venda, v.id_caixa, v.id_funcionario
+  FROM nota_fiscal AS nf
+  JOIN venda AS v ON v.id_venda = nf.id_venda
+ WHERE nf.tp_operacao = 'SAIDA'
+ ORDER BY nf.id_nota_fiscal;
+
+-- =====================================================================
+-- PARTE 3 - CONSULTAS DE AUDITORIA (devem voltar vazias, salvo aviso)
+-- =====================================================================
+
+-- A01 — O saldo do estoque bate com a soma das movimentações de cada produto?
+-- Verifica: RN17 (o saldo do estoque reflete as movimentações)
+SELECT e.id_produto, p.nm_produto, e.qt_atual,
+       COALESCE(SUM(CASE WHEN m.tp_movimento IN ('ENTRADA_COMPRA','AJUSTE_ENTRADA') THEN m.qt_movimentada
+                         ELSE -m.qt_movimentada END), 0) AS saldo_pelas_movimentacoes
+FROM estoque AS e
+JOIN produto AS p ON p.id_produto = e.id_produto
+LEFT JOIN movimentacao_estoque AS m ON m.id_produto = e.id_produto
+GROUP BY e.id_produto, p.nm_produto, e.qt_atual
+HAVING e.qt_atual <> COALESCE(SUM(CASE WHEN m.tp_movimento IN ('ENTRADA_COMPRA','AJUSTE_ENTRADA') THEN m.qt_movimentada
+                                       ELSE -m.qt_movimentada END), 0);
+
+-- A02 — Existe venda cujo total não bate com a soma dos itens menos o desconto?
+-- Verifica: RN03 (total da venda = soma dos itens menos desconto)
+SELECT v.id_venda, v.vl_total, SUM(iv.vl_subtotal) - v.vl_desconto AS total_calculado
+FROM venda AS v
+JOIN item_venda AS iv ON iv.id_venda = v.id_venda
+GROUP BY v.id_venda, v.vl_total, v.vl_desconto
+HAVING v.vl_total <> SUM(iv.vl_subtotal) - v.vl_desconto;
+
+-- A03 — Existe venda cuja soma dos pagamentos é diferente do total?
+-- Verifica: RN07 (a soma dos pagamentos, inclusive a parcela do fiado, é igual ao total da venda)
+SELECT v.id_venda, v.vl_total, COALESCE(SUM(p.vl_pago), 0) AS soma_pagamentos
+FROM venda AS v
+LEFT JOIN pagamento AS p ON p.id_venda = v.id_venda
+GROUP BY v.id_venda, v.vl_total
+HAVING v.vl_total <> COALESCE(SUM(p.vl_pago), 0);
+
+-- A04 — Existe venda registrada sem nenhum item?
+-- Verifica: RN02 (toda venda tem ao menos um item)
+SELECT v.id_venda, v.dt_venda
+FROM venda AS v
+WHERE NOT EXISTS (SELECT 1 FROM item_venda AS iv WHERE iv.id_venda = v.id_venda);
+
+-- A05 — Existe venda feita fora do período em que o caixa esteve aberto?
+-- Verifica: RN24 e RN02 (a venda pertence a um caixa e acontece enquanto ele está aberto)
+SELECT v.id_venda, v.dt_venda, cx.dt_abertura, cx.dt_fechamento
+FROM venda AS v
+JOIN caixa AS cx ON cx.id_caixa = v.id_caixa
+WHERE v.dt_venda < cx.dt_abertura
+   OR (cx.dt_fechamento IS NOT NULL AND v.dt_venda > cx.dt_fechamento);
+
+-- A06 — Existe venda de bebida alcoólica ou cigarro sem a conferência de maioridade?
+-- Verifica: RN26 e RN27
+SELECT DISTINCT v.id_venda, v.dt_venda, c.nm_categoria
+FROM venda AS v
+JOIN item_venda AS iv ON iv.id_venda = v.id_venda
+JOIN produto    AS p  ON p.id_produto = iv.id_produto
+JOIN categoria  AS c  ON c.id_categoria = p.id_categoria
+WHERE c.fl_restrita_maiores = 1 AND v.fl_maioridade_conferida = 0;
+
+-- A07 — Existe fiado cujo total não bate com a soma dos valores lançados nas linhas (item_fiado)?
+-- Verifica: RN09 e RN07 (o fiado vem da venda e o valor dele é o que foi lançado nas linhas)
+SELECT f.id_fiado, f.vl_total, COALESCE(SUM(fi.vl_fiado), 0) AS soma_lancada
+FROM fiado AS f
+LEFT JOIN item_venda AS iv ON iv.id_venda = f.id_venda
+LEFT JOIN item_fiado AS fi ON fi.id_item_venda = iv.id_item_venda
+GROUP BY f.id_fiado, f.vl_total
+HAVING f.vl_total <> COALESCE(SUM(fi.vl_fiado), 0);
+
+-- A08 — Existe pagamento FIADO em venda sem fiado, ou fiado cuja venda não tem pagamento FIADO do mesmo valor?
+-- Verifica: RN07 e RN09
+SELECT p.id_venda, 'pagamento FIADO sem fiado' AS problema
+FROM pagamento AS p
+WHERE p.tp_forma = 'FIADO' AND NOT EXISTS (SELECT 1 FROM fiado AS f WHERE f.id_venda = p.id_venda)
+UNION ALL
+SELECT f.id_venda, 'fiado sem pagamento FIADO do mesmo valor'
+FROM fiado AS f
+WHERE f.vl_total <> COALESCE((SELECT SUM(p2.vl_pago) FROM pagamento AS p2
+                              WHERE p2.id_venda = f.id_venda AND p2.tp_forma = 'FIADO'), 0);
+
+-- A09 — Existe fiado cujo valor pago não bate com a soma dos recebimentos?
+-- Verifica: RN12 e RN13 (o valor pago do fiado é a soma dos recebimentos)
+SELECT f.id_fiado, f.vl_pago, COALESCE(SUM(pf.vl_pago), 0) AS soma_recebimentos
+FROM fiado AS f
+LEFT JOIN pagamento_fiado AS pf ON pf.id_fiado = f.id_fiado
+GROUP BY f.id_fiado, f.vl_pago
+HAVING f.vl_pago <> COALESCE(SUM(pf.vl_pago), 0);
+
+-- A10 — Existe fiado de cliente menor de 18 anos ou sem consentimento LGPD na data de abertura?
+-- Verifica: RN08 e RN29 (cliente identificado, maior de idade e com consentimento LGPD)
+SELECT f.id_fiado, cl.nm_cliente, cl.dt_nascimento, cl.dt_consentimento_lgpd
+FROM fiado AS f
+JOIN cliente AS cl ON cl.id_cliente = f.id_cliente
+WHERE cl.dt_consentimento_lgpd > f.dt_abertura
+   OR DATE_ADD(cl.dt_nascimento, INTERVAL 6570 DAY) > DATE(f.dt_abertura);
+
+-- A11 — Existe cliente com saldo de fiado acima do limite?
+-- Verifica: RN10
+SELECT cl.id_cliente, cl.nm_cliente, cl.vl_limite_fiado, SUM(f.vl_total - f.vl_pago) AS saldo
+FROM cliente AS cl
+JOIN fiado AS f ON f.id_cliente = cl.id_cliente
+GROUP BY cl.id_cliente, cl.nm_cliente, cl.vl_limite_fiado
+HAVING SUM(f.vl_total - f.vl_pago) > cl.vl_limite_fiado;
+
+-- A12 — Existe fiado com situação diferente do que os valores dizem (QUITADO com saldo ou ABERTO sem saldo)?
+-- Verifica: RN14 (ABERTO enquanto o pago for menor que o total; QUITADO quando alcançar o total)
+SELECT f.id_fiado, f.vl_total, f.vl_pago, f.st_fiado
+FROM fiado AS f
+WHERE (f.st_fiado = 'QUITADO' AND f.vl_pago < f.vl_total)
+   OR (f.st_fiado = 'ABERTO'  AND f.vl_pago >= f.vl_total);
+
+-- A13 — Existe caixa fechado com diferença e sem justificativa?
+-- Verifica: RN23
+SELECT cx.id_caixa, cx.vl_diferenca
+FROM caixa AS cx
+WHERE cx.st_caixa = 'FECHADO' AND cx.vl_diferenca <> 0 AND cx.ds_observacao IS NULL;
+
+-- A14 — Existe mais de um caixa aberto ao mesmo tempo, ou o valor esperado de um caixa fechado não bate com o recalculado?
+-- Verifica: RN22 e RN23 (esperado = troco + dinheiro das vendas e dos fiados + suprimentos - sangrias e despesas)
+SELECT 'mais de um caixa aberto' AS problema, COUNT(*) AS quantidade
+FROM caixa WHERE st_caixa = 'ABERTO'
+HAVING COUNT(*) > 1
+UNION ALL
+SELECT CONCAT('caixa ', cx.id_caixa, ': esperado diferente do recalculado'), cx.vl_esperado
+FROM caixa AS cx
+WHERE cx.st_caixa = 'FECHADO'
+  AND ABS(cx.vl_esperado - (cx.vl_troco_inicial
+      + COALESCE((SELECT SUM(p.vl_pago) FROM pagamento AS p
+                  JOIN venda AS v ON v.id_venda = p.id_venda
+                  WHERE v.id_caixa = cx.id_caixa AND v.st_venda = 'CONCLUIDA' AND p.tp_forma = 'DINHEIRO'), 0)
+      + COALESCE((SELECT SUM(pf.vl_pago) FROM pagamento_fiado AS pf
+                  WHERE pf.id_caixa = cx.id_caixa AND pf.tp_forma = 'DINHEIRO'), 0)
+      + COALESCE((SELECT SUM(CASE WHEN mc.tp_movimento = 'SUPRIMENTO' THEN mc.vl_movimento ELSE -mc.vl_movimento END)
+                  FROM movimentacao_caixa AS mc WHERE mc.id_caixa = cx.id_caixa), 0))) > 0.005;
+
+-- A15 — Existe item de compra recebido sem conferência, ou divergência sem descrição?
+-- Verifica: RN21 (conferência do recebimento e registro da divergência)
+SELECT ic.id_item_compra, c.id_compra, c.st_compra, ic.fl_conferido, ic.ds_divergencia
+FROM item_compra AS ic
+JOIN compra AS c ON c.id_compra = ic.id_compra
+WHERE (c.st_compra IN ('RECEBIDA','RECEBIDA_PARCIAL') AND ic.fl_conferido = 0)
+   OR (ic.qt_recebida < ic.qt_pedida AND ic.qt_recebida > 0 AND ic.ds_divergencia IS NULL);
+
+-- A16 — Existe compra cujo valor total não bate com a soma dos itens?
+-- Verifica: RN20 (valor da compra = soma dos itens)
+SELECT c.id_compra, c.vl_total, COALESCE(SUM(ic.qt_pedida * ic.vl_custo), 0) AS soma_itens
+FROM compra AS c
+LEFT JOIN item_compra AS ic ON ic.id_compra = c.id_compra
+GROUP BY c.id_compra, c.vl_total
+HAVING ROUND(c.vl_total, 2) <> ROUND(COALESCE(SUM(ic.qt_pedida * ic.vl_custo), 0), 2);
+
+-- A17 — Alguma venda deixou de gerar a saída de estoque? (unidades vendidas x saídas por venda, por produto)
+-- Verifica: RN05 e RN17 (cada unidade vendida gerou a saída de estoque)
+SELECT t.id_produto, t.nm_produto, t.unidades_vendidas, t.saidas_registradas
+FROM (SELECT p.id_produto, p.nm_produto,
+             COALESCE((SELECT SUM(iv.qt_item) FROM item_venda AS iv
+                       WHERE iv.id_produto = p.id_produto AND iv.tp_item = 'UNIDADE'), 0) AS unidades_vendidas,
+             COALESCE((SELECT SUM(m.qt_movimentada) FROM movimentacao_estoque AS m
+                       WHERE m.id_produto = p.id_produto AND m.tp_movimento = 'SAIDA_VENDA'), 0) AS saidas_registradas
+      FROM produto AS p) AS t
+WHERE t.unidades_vendidas <> t.saidas_registradas;
+
+-- A18 — Existe lote vencido que ainda tem saldo e não foi baixado como perda?
+-- Verifica: RN19 (produto vencido sai da venda e é baixado). ATENÇÃO: pode trazer linhas, e isso é
+-- o que a consulta serve para mostrar: lotes que venceram depois da última conferência do gerente.
+SELECT p.nm_produto, l.nr_lote, l.dt_validade, l.qt_disponivel
+FROM lote AS l
+JOIN item_compra AS ic ON ic.id_item_compra = l.id_item_compra
+JOIN produto     AS p  ON p.id_produto = ic.id_produto
+WHERE l.qt_disponivel > 0 AND l.dt_validade < @hoje
+ORDER BY l.dt_validade;
+
+-- A19 — Existe perda ou ajuste de estoque sem motivo, ou feito por quem não é gerente?
+-- Verifica: RN15 e RN16 (perda e ajuste exigem motivo e funcionário responsável; a aprovação do gerente é regra da massa)
+SELECT m.id_movimentacao, m.tp_movimento, fu.nm_funcionario, fu.tp_cargo, m.ds_motivo
+FROM movimentacao_estoque AS m
+JOIN funcionario AS fu ON fu.id_funcionario = m.id_funcionario
+WHERE m.tp_movimento IN ('PERDA','AJUSTE_ENTRADA','AJUSTE_SAIDA')
+  AND (m.ds_motivo IS NULL OR fu.tp_cargo <> 'GERENTE');
+
+-- A20 — Existe garrafa aberta com ml restante errado (maior que o inicial, ou diferente do inicial menos as doses vendidas)?
+-- Verifica: RN06 (a venda de doses desconta os ml da garrafa aberta)
+SELECT g.id_garrafa_aberta, g.qt_ml_inicial, g.qt_ml_restante,
+       COALESCE(SUM(iv.qt_item), 0) * p.qt_ml_dose AS ml_vendidos
+FROM garrafa_aberta AS g
+JOIN produto AS p ON p.id_produto = g.id_produto
+LEFT JOIN item_venda AS iv ON iv.id_garrafa_aberta = g.id_garrafa_aberta AND iv.tp_item = 'DOSE'
+GROUP BY g.id_garrafa_aberta, g.qt_ml_inicial, g.qt_ml_restante, p.qt_ml_dose
+HAVING g.qt_ml_restante <> g.qt_ml_inicial - COALESCE(SUM(iv.qt_item), 0) * p.qt_ml_dose
+    OR g.qt_ml_restante < 0;
+
+-- =====================================================================
+-- PARTE 3 - EXEMPLOS BÁSICOS E TESTES (antigo exemplos_basicos.sql)
+-- Execute esta parte depois de carregar massa_de_dados.sql.
+-- Os testes de violações foram escritos para gerar os erros descritos.
+-- Execute um por vez; erros esperados não significam falha da estrutura.
+-- =====================================================================
+
+-- =====================================================================
+USE adega;
+SET @id_funcionario_logado = 1;
+
+-- ---------------------------------------------------------------------
+-- BLOCO 1 - INSERT que funciona
+-- ---------------------------------------------------------------------
+
+-- T01 — Cadastrar um produto novo (o trigger cria o estoque zerado sozinho)
+-- Esperado: OK. O SELECT mostra o produto e o estoque com qt_atual = 0.
+START TRANSACTION;
+INSERT INTO produto (id_categoria, cd_barras, nm_produto, vl_venda, fl_controla_validade)
+VALUES (1, '2000000009991', 'Produto de teste 350 ml', 4.50, 0);
+SELECT p.id_produto, p.nm_produto, e.qt_atual
+FROM produto AS p JOIN estoque AS e ON e.id_produto = p.id_produto
+WHERE p.cd_barras = '2000000009991';
+ROLLBACK;
+
+-- T02 — Cadastrar um cliente adulto, com consentimento LGPD
+-- Esperado: OK. Nasce BLOQUEADO para fiado (fl_bloqueado = 1) e o trigger grava no log_acesso.
+START TRANSACTION;
+INSERT INTO cliente (nm_cliente, nr_cpf, dt_nascimento, nr_telefone, dt_consentimento_lgpd)
+VALUES ('Cliente Teste da Silva', '91999999999', '1990-05-10', '11900000000', '2026-11-01 10:00:00');
+SELECT id_cliente, nm_cliente, vl_limite_fiado, fl_bloqueado FROM cliente WHERE nr_cpf = '91999999999';
+SELECT tp_evento, nm_tabela FROM log_acesso ORDER BY id_log DESC LIMIT 1;
+ROLLBACK;
+
+-- T03 — Entrada de compra: o trigger soma no estoque
+-- Esperado: OK. qt_atual do produto 27 sobe 3 unidades (produto sem controle de validade).
+START TRANSACTION;
+SELECT qt_atual AS antes FROM estoque WHERE id_produto = 27;
+INSERT INTO movimentacao_estoque (id_produto, id_funcionario, tp_movimento, qt_movimentada, ds_motivo)
+VALUES (27, 1, 'ENTRADA_COMPRA', 3, 'Teste de recebimento');
+SELECT qt_atual AS depois FROM estoque WHERE id_produto = 27;
+ROLLBACK;
+
+-- T04 — Venda simples de um produto sem controle de validade, paga em dinheiro
+-- Esperado: OK. O trigger baixa 1 unidade do estoque sozinho (SAIDA_VENDA automática).
+START TRANSACTION;
+SELECT qt_atual AS antes FROM estoque WHERE id_produto = 27;
+INSERT INTO venda (id_funcionario, id_caixa, vl_total, fl_maioridade_conferida) VALUES (2, 91, 10.00, 1);
+SET @v = LAST_INSERT_ID();
+INSERT INTO item_venda (id_venda, id_produto, tp_item, qt_item, vl_unitario) VALUES (@v, 27, 'UNIDADE', 1, 10.00);
+INSERT INTO pagamento (id_venda, tp_forma, vl_pago) VALUES (@v, 'DINHEIRO', 10.00);
+SELECT qt_atual AS depois FROM estoque WHERE id_produto = 27;
+SELECT tp_movimento, qt_movimentada FROM movimentacao_estoque ORDER BY id_movimentacao DESC LIMIT 1;
+ROLLBACK;
+
+-- T05 — Autorizar cliente para fiado pela procedure (só o gerente pode)
+-- Esperado: OK. Cliente 4 (bloqueado) passa a ter limite 120,00 e fl_bloqueado = 0.
+START TRANSACTION;
+CALL sp_autorizar_cliente_fiado(4, 120.00);
+SELECT id_cliente, vl_limite_fiado, fl_bloqueado FROM cliente WHERE id_cliente = 4;
+ROLLBACK;
+
+-- T06 — Fechar o caixa pela procedure
+-- Esperado: OK. A procedure calcula o esperado e grava a diferença (coluna calculada).
+-- A procedure executa COMMIT internamente; por isso usamos um caixa exclusivo do teste,
+-- sem alterar o caixa 91, que será utilizado nos testes seguintes.
+INSERT INTO caixa (id_funcionario, vl_troco_inicial) VALUES (4, 0.00);
+SET @caixa_teste = LAST_INSERT_ID();
+SET @id_funcionario_logado = 4;
+CALL sp_fechar_caixa(@caixa_teste, 150.00);
+SELECT st_caixa, vl_esperado, vl_contado, vl_diferenca
+FROM caixa WHERE id_caixa = @caixa_teste;
+SET @id_funcionario_logado = 1;
+
+-- ---------------------------------------------------------------------
+-- BLOCO 2 - UPDATE
+-- ---------------------------------------------------------------------
+
+-- T07 — Reajustar o preço de um produto (RN04: o preço novo vale só para vendas futuras)
+-- Esperado: OK. Vendas antigas continuam com o vl_unitario que gravaram.
+START TRANSACTION;
+UPDATE produto SET vl_venda = vl_venda + 1.00 WHERE id_produto = 1;
+SELECT id_produto, nm_produto, vl_venda FROM produto WHERE id_produto = 1;
+SELECT iv.id_item_venda, iv.vl_unitario FROM item_venda AS iv WHERE iv.id_produto = 1 LIMIT 3;
+ROLLBACK;
+
+-- T08 — Alterar a quantidade mínima do estoque (a quantidade atual só muda por movimentação)
+-- Esperado: OK
+START TRANSACTION;
+UPDATE estoque SET qt_minima = qt_minima + 2 WHERE id_produto = 27;
+SELECT id_produto, qt_atual, qt_minima FROM estoque WHERE id_produto = 27;
+ROLLBACK;
+
+-- T09 — Bloquear um cliente (volta a exigir autorização do gerente para fiado)
+-- Esperado: OK, e o trigger registra a alteração no log_acesso.
+START TRANSACTION;
+UPDATE cliente SET fl_bloqueado = 1 WHERE id_cliente = 1;
+SELECT id_cliente, fl_bloqueado FROM cliente WHERE id_cliente = 1;
+SELECT tp_evento, nm_tabela, id_registro FROM log_acesso ORDER BY id_log DESC LIMIT 1;
+ROLLBACK;
+
+-- ---------------------------------------------------------------------
+-- BLOCO 3 - DELETE
+-- ---------------------------------------------------------------------
+
+-- T10 — Apagar um registro que nenhuma outra tabela usa
+-- Esperado: OK (1 linha apagada)
+START TRANSACTION;
+INSERT INTO categoria (nm_categoria, fl_restrita_maiores) VALUES ('Categoria de teste', 0);
+DELETE FROM categoria WHERE nm_categoria = 'Categoria de teste';
+SELECT COUNT(*) AS sobrou FROM categoria WHERE nm_categoria = 'Categoria de teste';
+ROLLBACK;
+
+-- T11 — Apagar uma categoria que tem produtos
+-- Esperado: ERRO 1451 (Cannot delete or update a parent row: a foreign key constraint fails)
+-- Porque: as FKs são RESTRICT, então não dá para apagar o "pai" com "filhos".
+DELETE FROM categoria WHERE id_categoria = 1;
+
+-- T12 — Apagar um cliente que tem fiado
+-- Esperado: ERRO 1451
+DELETE FROM cliente WHERE id_cliente = 1;
+
+-- T13 — Apagar um item de venda
+-- Esperado: ERRO 1644 (SQLSTATE 45000): 'Item de venda não pode ser excluído; registre cancelamento/ajuste apropriado.'
+DELETE FROM item_venda WHERE id_item_venda = 1;
+
+-- T14 — Apagar uma movimentação de estoque
+-- Esperado: ERRO 1644: 'Movimentações não podem ser excluídas.'
+DELETE FROM movimentacao_estoque WHERE id_movimentacao = 1;
+
+-- ---------------------------------------------------------------------
+-- BLOCO 4 - violações de constraint (todas devem dar erro)
+-- ---------------------------------------------------------------------
+
+-- T15 — PK repetida
+-- Esperado: ERRO 1062 (Duplicate entry '1' for key 'categoria.PRIMARY')
+INSERT INTO categoria (id_categoria, nm_categoria, fl_restrita_maiores) VALUES (1, 'Categoria repetida', 0);
+
+-- T16 — FK que não existe (produto com categoria 999)
+-- Esperado: ERRO 1452 (Cannot add or update a child row: a foreign key constraint fails)
+INSERT INTO produto (id_categoria, nm_produto, vl_venda) VALUES (999, 'Produto sem categoria', 5.00);
+
+-- T17 — UNIQUE: CPF de cliente repetido
+-- Esperado: ERRO 1062 (... for key 'cliente.uq_cliente_nr_cpf')
+INSERT INTO cliente (nm_cliente, nr_cpf, dt_nascimento, nr_telefone, dt_consentimento_lgpd)
+SELECT 'Cliente repetido', nr_cpf, '1990-01-01', '11900000001', '2026-11-01 10:00:00' FROM cliente WHERE id_cliente = 1;
+
+-- T18 — UNIQUE: código de barras repetido
+-- Esperado: ERRO 1062 (... for key 'produto.uq_produto_cd_barras')
+INSERT INTO produto (id_categoria, cd_barras, nm_produto, vl_venda)
+SELECT id_categoria, cd_barras, 'Produto com código repetido', 5.00 FROM produto WHERE cd_barras IS NOT NULL LIMIT 1;
+
+-- T19 — UNIQUE: segundo fiado para a mesma venda
+-- Esperado: ERRO 1062 (... for key 'fiado.uq_fiado_id_venda'). Um fiado nasce de uma única venda.
+INSERT INTO fiado (id_venda, id_cliente, dt_vencimento, vl_total)
+SELECT id_venda, id_cliente, '2026-12-01', 10.00 FROM fiado WHERE id_fiado = 1;
+
+-- T20 — CHECK: preço de venda negativo
+-- Esperado: ERRO 3819 (Check constraint 'chk_produto_vl_venda' is violated)
+INSERT INTO produto (id_categoria, nm_produto, vl_venda) VALUES (1, 'Produto preço negativo', -5.00);
+
+-- T21 — CHECK: quantidade zero no item de venda
+-- Esperado: ERRO 3819 (chk_item_venda_qt)
+INSERT INTO item_venda (id_venda, id_produto, tp_item, qt_item, vl_unitario)
+VALUES (2, 27, 'UNIDADE', 0, 5.00);
+
+-- T22 — CHECK: pagamento de valor zero
+-- Esperado: ERRO 3819 (chk_pagamento_valor)
+INSERT INTO pagamento (id_venda, tp_forma, vl_pago) VALUES (1, 'DINHEIRO', 0);
+
+-- T23 — CHECK: estoque negativo
+-- Esperado: ERRO 3819 (chk_estoque_qt_atual)
+UPDATE estoque SET qt_atual = -1 WHERE id_produto = 27;
+
+-- T24 — CHECK: perda sem motivo
+-- Esperado: ERRO 3819 (chk_mov_motivo). RN15: perda exige motivo.
+INSERT INTO movimentacao_estoque (id_produto, id_funcionario, tp_movimento, qt_movimentada)
+VALUES (27, 1, 'PERDA', 1);
+
+-- T25 — CHECK: fechar o caixa sem informar o valor contado
+-- Esperado: ERRO 3819 (chk_caixa_fechamento)
+UPDATE caixa SET st_caixa = 'FECHADO', dt_fechamento = NOW() WHERE id_caixa = 91;
+
+-- T26 — TRIGGER: impedir aumento do volume restante da garrafa
+-- Esperado: ERRO 1644 (trigger): 'Dados da garrafa não podem ser aumentados ou trocados; registre nova abertura.'
+UPDATE garrafa_aberta SET qt_ml_restante = qt_ml_inicial + 1 WHERE id_garrafa_aberta = 1;
+
+-- T27 — NOT NULL: cliente sem CPF
+-- Esperado: ERRO 1048 (Column 'nr_cpf' cannot be null)
+INSERT INTO cliente (nm_cliente, nr_cpf, dt_nascimento, nr_telefone, dt_consentimento_lgpd)
+VALUES ('Cliente sem CPF', NULL, '1990-01-01', '11900000002', '2026-11-01 10:00:00');
+
+-- T28 — Coluna calculada não aceita valor digitado
+-- Esperado: ERRO 3105 (The value specified for generated column 'vl_subtotal' ... is not allowed)
+INSERT INTO item_venda (id_venda, id_produto, tp_item, qt_item, vl_unitario, vl_subtotal)
+VALUES (2, 27, 'UNIDADE', 1, 5.00, 999.00);
+
+-- T29 — ENUM com valor fora da lista
+-- Esperado: ERRO 1265 (Data truncated for column 'tp_forma'), no modo estrito do MySQL 8.0
+INSERT INTO pagamento (id_venda, tp_forma, vl_pago) VALUES (1, 'CHEQUE', 10.00);
+
+-- ---------------------------------------------------------------------
+-- BLOCO 5 - regras de negócio nos triggers e procedures (todas devem dar erro)
+-- Mensagem esperada: ERRO 1644 (SQLSTATE 45000) com o texto indicado.
+-- ---------------------------------------------------------------------
+
+-- T30 — Item de venda alterado depois de gravado
+-- Esperado: 'Item de venda não pode ser alterado; registre cancelamento/ajuste apropriado.'
+UPDATE item_venda SET qt_item = qt_item + 1 WHERE id_item_venda = 1;
+
+-- T31 — Movimentação de estoque alterada
+-- Esperado: 'Movimentações não podem ser alteradas; registre um ajuste.'
+UPDATE movimentacao_estoque SET qt_movimentada = 99 WHERE id_movimentacao = 1;
+
+-- T32 — Venda com o caixa fechado
+-- Esperado: 'A venda exige um caixa aberto.'
+INSERT INTO venda (id_funcionario, id_caixa, vl_total) VALUES (2, 1, 10.00);
+
+-- T33 — Venda de produto restrito (bebida alcoólica) sem conferir a maioridade
+-- Esperado: 'Venda de produto restrito exige conferência da maioridade.'
+START TRANSACTION;
+INSERT INTO venda (id_funcionario, id_caixa, vl_total, fl_maioridade_conferida) VALUES (2, 91, 10.00, 0);
+INSERT INTO item_venda (id_venda, id_produto, tp_item, qt_item, vl_unitario)
+SELECT LAST_INSERT_ID(), p.id_produto, 'UNIDADE', 1, 10.00
+FROM produto AS p JOIN categoria AS c ON c.id_categoria = p.id_categoria
+WHERE c.fl_restrita_maiores = 1 LIMIT 1;
+ROLLBACK;
+
+-- T34 — Produto com controle de validade vendido sem informar o lote
+-- Esperado: 'Produto com controle de validade exige informar o lote vendido.'
+START TRANSACTION;
+INSERT INTO venda (id_funcionario, id_caixa, vl_total, fl_maioridade_conferida) VALUES (2, 91, 10.00, 1);
+INSERT INTO item_venda (id_venda, id_produto, tp_item, qt_item, vl_unitario)
+SELECT LAST_INSERT_ID(), id_produto, 'UNIDADE', 1, 10.00 FROM produto WHERE fl_controla_validade = 1 AND fl_vende_dose = 0 LIMIT 1;
+ROLLBACK;
+
+-- T35 — Saída de lote maior que o saldo
+-- Esperado: 'Quantidade maior que o saldo disponível no lote.'
+START TRANSACTION;
+INSERT INTO movimentacao_estoque (id_produto, id_funcionario, id_lote, tp_movimento, qt_movimentada, ds_motivo)
+SELECT ic.id_produto, 1, l.id_lote, 'PERDA', l.qt_disponivel + 1, 'Teste de saldo'
+FROM lote AS l JOIN item_compra AS ic ON ic.id_item_compra = l.id_item_compra
+WHERE l.qt_disponivel > 0 LIMIT 1;
+ROLLBACK;
+
+-- T36 — Pagamento passando do total da venda
+-- Esperado: 'A soma dos pagamentos não pode ultrapassar o total da venda.'
+INSERT INTO pagamento (id_venda, tp_forma, vl_pago) VALUES (1, 'PIX', 9999.00);
+
+-- T37 — Pagamento FIADO sem cadastrar o fiado antes
+-- Esperado: 'Cadastre o fiado antes de registrar o pagamento FIADO.'
+START TRANSACTION;
+INSERT INTO venda (id_funcionario, id_caixa, vl_total, fl_maioridade_conferida) VALUES (2, 91, 10.00, 1);
+SET @v = LAST_INSERT_ID();
+INSERT INTO item_venda (id_venda, id_produto, tp_item, qt_item, vl_unitario) VALUES (@v, 27, 'UNIDADE', 1, 10.00);
+INSERT INTO pagamento (id_venda, tp_forma, vl_pago) VALUES (@v, 'FIADO', 10.00);
+ROLLBACK;
+
+-- T38 — Autorizar fiado sendo atendente (só gerente pode)
+-- Esperado: 'Somente gerente pode autorizar cliente para fiado.'
+SET @id_funcionario_logado = 2;
+CALL sp_autorizar_cliente_fiado(4, 100.00);
+SET @id_funcionario_logado = 1;
+
+-- T39 — Fiado para cliente bloqueado (cliente 4 está bloqueado por fiado vencido)
+-- Esperado: 'Fiado permitido somente para cliente conhecido e autorizado pela gerência.'
+START TRANSACTION;
+INSERT INTO venda (id_funcionario, id_caixa, vl_total, fl_maioridade_conferida) VALUES (2, 91, 10.00, 1);
+SET @v = LAST_INSERT_ID();
+INSERT INTO item_venda (id_venda, id_produto, tp_item, qt_item, vl_unitario) VALUES (@v, 27, 'UNIDADE', 1, 10.00);
+CALL sp_registrar_venda_fiado(@v, 4, DATE_ADD(CURDATE(), INTERVAL 30 DAY), 10.00);
+ROLLBACK;
+
+-- T40 — Fiado acima do limite do cliente (cliente 12 tem limite 100,00)
+-- Esperado: 'Fiado recusado: valor ultrapassa o limite disponível do cliente.'
+START TRANSACTION;
+INSERT INTO venda (id_funcionario, id_caixa, vl_total, fl_maioridade_conferida) VALUES (2, 91, 500.00, 1);
+SET @v = LAST_INSERT_ID();
+INSERT INTO item_venda (id_venda, id_produto, tp_item, qt_item, vl_unitario) VALUES (@v, 27, 'UNIDADE', 1, 500.00);
+CALL sp_registrar_venda_fiado(@v, 12, DATE_ADD(CURDATE(), INTERVAL 30 DAY), 500.00);
+ROLLBACK;
+
+-- T41 — Recebimento de fiado maior que o saldo devedor
+-- Esperado: 'Pagamento inválido ou maior que o saldo devedor.'
+INSERT INTO pagamento_fiado (id_fiado, id_caixa, tp_forma, vl_pago) VALUES (1, 91, 'PIX', 99999.00);
+
+-- T42 — Abrir garrafa de produto que não vende dose
+-- Esperado: 'Produto não está habilitado para venda por dose.'
+START TRANSACTION;
+SELECT l.id_lote INTO @lote_sem_dose
+FROM lote AS l JOIN item_compra AS ic ON ic.id_item_compra = l.id_item_compra
+JOIN produto AS p ON p.id_produto = ic.id_produto
+WHERE p.fl_vende_dose = 0 AND l.qt_disponivel > 0 LIMIT 1;
+CALL sp_abrir_garrafa(@lote_sem_dose, 2, @g);
+ROLLBACK;
+
+-- T43 — Fechar um caixa que já está fechado
+-- Esperado: 'Caixa inexistente ou já fechado.'
+CALL sp_fechar_caixa(1, 100.00);
+
+-- T44 — Movimentar caixa (sangria) com o caixa fechado
+-- Esperado: 'Movimentação exige caixa aberto.'
+INSERT INTO movimentacao_caixa (id_caixa, id_funcionario, tp_movimento, vl_movimento, ds_motivo)
+VALUES (1, 1, 'SANGRIA', 50.00, 'Teste com caixa fechado');
+
+-- T45 — Registrar evento de acesso com tipo reservado
+-- Esperado: 'Evento reservado para login e consulta de dado pessoal.'
+CALL sp_registrar_evento_acesso(1, 'UPDATE', 'cliente', '1', NULL, '192.168.0.1');
