@@ -137,3 +137,15 @@ Essas informações permitem consultar quem está escalado em cada dia e organiz
 **Dados envolvidos:** funcionário, data do turno, horário de início, horário de término e função.
 
 **Entidades relacionadas:** FUNCIONARIO e ESCALA.
+
+### PR13 — Registro de documento fiscal
+
+Quando uma compra é recebida, o número ou a chave da nota do fornecedor é informado e o documento fiscal de entrada é registrado, ligado à compra. Quando uma venda tem documento fiscal (NFC-e ou cupom fiscal), o documento de saída é registrado, ligado à venda. Cada documento guarda o modelo, o número, a série, a chave de acesso de 44 dígitos (quando houver), a data de emissão, o valor total e a situação.
+
+A situação nasce como `SEM_VALIDACAO` (registro interno). Quando a autorização, o cancelamento ou a denegação é confirmado na SEFAZ, a situação passa a `AUTORIZADA`, `CANCELADA` ou `DENEGADA`. Cada compra ou venda tem no máximo um documento, e a chave de acesso não se repete. O gerente consulta os documentos de entrada (com a compra e o fornecedor) e os de saída (com a venda, o caixa e o funcionário) pelas consultas do bloco "Controle de notas fiscais".
+
+O banco só registra e controla os documentos. A emissão da NF-e/NFC-e, a assinatura com o certificado digital e a consulta ou autorização na SEFAZ são feitas pela aplicação ou por um emissor integrado, fora do banco de dados.
+
+**Dados envolvidos:** compra ou venda, modelo, número, série, chave de acesso, data de emissão, valor total, situação e observação.
+
+**Entidades relacionadas:** NOTA_FISCAL, COMPRA, VENDA e FORNECEDOR.
