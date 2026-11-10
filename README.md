@@ -679,7 +679,6 @@ Ferramentas de IA foram usadas como **apoio** à organização, revisão e confe
 | Prompt(s) utilizados | "coloca essa informação crucial dentro do banco de dados, da entrega 2, professor falou que essa informação não pode faltar no banco de dados, e a adega precisa ter isso" e "joga essa informação no banco de dados e onde precisar". |
 | Resposta recebida | Atualização de README, levantamento, modelo lógico, normalização, dicionário, indicadores e diagramas: tabela `nota_fiscal` (entrada e saída), regras RN31 a RN36, requisitos RF27 a RF29, processo PR13 e KPI09, com os números recalculados a partir da massa |
 | Fontes consultadas e verificadas | O `script.sql` e a massa corrigidos pelo professor, que são a referência; os números (468 documentos, 378 de 643 vendas) foram contados por programa na massa |
-| Trechos rejeitados ou corrigidos | 
 | Justificativa da escolha final | Seguir o `script.sql` do professor: tabela própria `nota_fiscal` ligada a compra ou venda, que só registra o documento; a emissão e a autorização na SEFAZ ficam fora do banco |
 | Reflexão crítica | A documentação não foi executada em MySQL real. Modelo, série, chave de acesso e situação dos documentos migrados precisam ser confirmados com o contador da adega. O desenho do brModelo (`.brm` e PNG) não foi atualizado |
 
