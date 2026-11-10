@@ -35,9 +35,9 @@ Eles justificam o volume da massa de dados (seção 4 do [`README.md`](../README
 
 | Documento | Conteúdo | Quantidade |
 | :--- | :--- | :--- |
-| [`Requisitos.md`](Requisitos.md) | Requisitos funcionais e não funcionais | 26 RF e 9 RNF |
-| [`regras_de_negocio.md`](regras_de_negocio.md) | Regras de negócio | 30 regras (RN01 a RN30) |
-| [`processos.md`](processos.md) | Processos de negócio | 12 processos (PR01 a PR12) |
+| [`Requisitos.md`](Requisitos.md) | Requisitos funcionais e não funcionais | 29 RF e 9 RNF |
+| [`regras_de_negocio.md`](regras_de_negocio.md) | Regras de negócio | 36 regras (RN01 a RN36) |
+| [`processos.md`](processos.md) | Processos de negócio | 13 processos (PR01 a PR13) |
 
 ## Origem das informações
 
