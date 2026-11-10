@@ -656,7 +656,8 @@ As quantidades acima vêm da simulação (leitura do arquivo da massa e das regr
 | Relatório Técnico Final | [`README.md`](README.md) |
 | DER conceitual revisado | [`diagramas/der_conceitual`](diagramas/). apoio: [`.png`](diagramas/der_conceitual.png) e [`.md`](diagramas/der_conceitual.md) |
 | Modelo lógico (editável, brModelo) | [`diagramas/modelo_logico.brm`](diagramas/modelo_logico.brm) |
-| Modelo lógico (imagem) | [`diagramas/modelo_logico.png`](diagramas/modelo_logico.png) |
+| Modelo lógico (imagem) | [`diagramas/modelo_logico.png`](diagramas/diagrama
+.png) |
 | Modelo lógico (texto) | [`docs/modelo_logico.md`](docs/modelo_logico.md) |
 | Normalização | [`docs/normalizacao.md`](docs/normalizacao.md) |
 | Justificativa técnica | [`docs/justificativa_tecnica.md`](docs/justificativa_tecnica.md) |
