@@ -53,10 +53,10 @@
   - fornecedores, compras e itens comprados;
   - funcionários e escalas;
   - caixa (abertura, fechamento, suprimento, sangria e despesa);
-  - emissão de nota fiscal eletrônica (NFC-e) de cada venda, com os dados fiscais da adega e dos produtos;
+  - registro dos documentos fiscais de entrada (compras) e de saída (vendas), com número, série, chave de acesso, data de emissão, valor e situação;
   - registro de ações importantes para auditoria.
 
-  O modelo conceitual possui 20 entidades de negócio (as 18 da versão anterior mais `EMITENTE` e `DOCUMENTO_FISCAL`, da parte fiscal). Na implementação lógica há 23 tabelas: as 20 entidades mais três tabelas de apoio criadas na implementação: `log_acesso` (auditoria), `garrafa_aberta` (volume restante das garrafas abertas para dose) e `movimentacao_caixa` (suprimentos, sangrias e despesas do caixa).
+  O modelo conceitual possui 19 entidades de negócio (as 18 da versão anterior mais `NOTA_FISCAL`, dos documentos fiscais). Na implementação lógica há 22 tabelas: as 19 entidades mais três tabelas de apoio criadas na implementação: `log_acesso` (auditoria), `garrafa_aberta` (volume restante das garrafas abertas para dose) e `movimentacao_caixa` (suprimentos, sangrias e despesas do caixa).
 - **Justificativa da escolha:** a Adega do Tonho é uma organização real, de pequeno porte, com vendas, compras, pagamentos, controle de estoque e fiado. Um dos integrantes tem vínculo de trabalho com a adega e acompanha parte da rotina; esse vínculo facilitou o levantamento, mas **não dispensa a entrevista com o responsável no local** (ver o relato abaixo).
 - **Evidências da organização** (arquivos JPG ou PNG dentro de [`evidencias/`](evidencias/)):
   - Endereço completo: R. Joaquim Meira de Siqueira, 772 - Jardim Nossa Sra. do Carmo, São Paulo - SP, 08275-490
@@ -107,7 +107,7 @@ Processos detalhados e fluxogramas: [`levantamento/processos.md`](levantamento/p
 | PR10 | Abertura e fechamento de caixa | Registro do valor inicial, movimentações, valor contado e possíveis diferenças no fechamento. | Proposta | CAIXA, VENDA e PAGAMENTO |
 | PR11 | Cadastro de produtos | Organização das informações dos produtos, categorias, preços e características de venda. | Necessidade identificada no levantamento | PRODUTO e CATEGORIA |
 | PR12 | Escala de funcionários | Registro dos dias, horários e funções dos funcionários. | Proposta | FUNCIONARIO e ESCALA |
-| PR13 | Emissão de nota fiscal eletrônica (NFC-e) | Emissão da nota de cada venda concluída, com número, série, chave de acesso, protocolo e situação; reemissão quando rejeitada e cancelamento com motivo. | Obrigação fiscal da adega; o controle no sistema é proposta | DOCUMENTO_FISCAL, EMITENTE, VENDA e PRODUTO |
+| PR13 | Registro de documento fiscal | Registro do documento fiscal de cada compra (entrada) e de cada venda (saída), com número, série, chave de acesso, data de emissão, valor e situação. | Obrigação fiscal da adega; o controle no sistema é proposta | NOTA_FISCAL, COMPRA e VENDA |
 
 *Processos típicos do tipo de organização que ficaram de fora, e por quê:*
 
@@ -116,7 +116,7 @@ Processos detalhados e fluxogramas: [`levantamento/processos.md`](levantamento/p
 | Entrega em domicílio | A adega não faz entrega e nem pretende fazer. |
 | Folha de pagamento | Ainda não existe na adega; por isso ficou fora do sistema. |
 | Programa de fidelidade | A adega não tem. |
-| Transmissão da nota à SEFAZ pelo próprio banco | O banco guarda e controla a emissão (PR13), mas a assinatura com o certificado digital e o envio do XML à SEFAZ são feitos pela aplicação ou por um emissor integrado, fora do banco. |
+| Emissão e autorização da nota pela SEFAZ pelo próprio banco | O banco registra e controla os documentos fiscais (PR13), mas a emissão da NF-e/NFC-e, a assinatura com o certificado digital e a consulta ou autorização na SEFAZ são feitas pela aplicação ou por um emissor integrado, fora do banco. |
 
 **Requisitos**
 
@@ -152,9 +152,9 @@ Levantamento completo: [`levantamento/Requisitos.md`](levantamento/Requisitos.md
 | RF24 | O sistema deve permitir registrar a conferência dos itens recebidos em compras e suas possíveis divergências. |
 | RF25 | O sistema deve permitir registrar suprimentos, sangrias e despesas em dinheiro no caixa aberto, para que o valor esperado do fechamento considere essas movimentações. |
 | RF26 | O sistema deve permitir controlar o volume restante de cada garrafa aberta para venda de doses, impedindo a venda de doses acima do volume disponível. |
-| RF27 | O sistema deve permitir cadastrar os dados fiscais da adega como emitente (razão social, CNPJ, inscrição estadual, regime tributário e endereço) e, em cada produto, o NCM, o CFOP e o CSOSN necessários para emitir a nota fiscal. |
-| RF28 | O sistema deve permitir emitir a nota fiscal eletrônica (NFC-e) de cada venda concluída e registrar o número, a série, a chave de acesso, o protocolo de autorização, a situação, as datas, o funcionário que emitiu e o XML do documento. |
-| RF29 | O sistema deve permitir consultar as notas fiscais pendentes ou rejeitadas, emitir novamente uma nota rejeitada e cancelar uma nota autorizada informando o motivo, e deve impedir o fechamento do caixa com venda concluída sem nota fiscal. |
+| RF27 | O sistema deve permitir registrar o documento fiscal de cada compra (entrada) e de cada venda (saída), com o modelo (NF-e, NFC-e, cupom fiscal ou outro), o número, a série, a chave de acesso, a data de emissão e o valor total. |
+| RF28 | O sistema deve permitir consultar os documentos fiscais de entrada, com a compra e o fornecedor, e os de saída, com a venda, o caixa e o funcionário, e acompanhar a situação de cada documento (sem validação, autorizada, cancelada ou denegada). |
+| RF29 | O sistema deve impedir que um documento fiscal fique ligado ao mesmo tempo a uma compra e a uma venda, que uma compra ou venda tenha mais de um documento e que a chave de acesso se repita. |
 
 *Requisitos não funcionais*
 
@@ -174,7 +174,7 @@ Levantamento completo: [`levantamento/Requisitos.md`](levantamento/Requisitos.md
 
 | Requisito provável | Justificativa |
 | :---- | :---- |
-| Transmissão da nota fiscal à SEFAZ pelo banco de dados | A emissão é controlada no banco (RF27 a RF29), mas assinar o XML com o certificado digital e transmiti-lo à SEFAZ é função da aplicação ou de um emissor integrado. A compra continua guardando só o número ou a chave da nota do fornecedor (`compra.nr_nota_fiscal`). |
+| Emissão da nota fiscal e autorização na SEFAZ pelo banco de dados | O banco só registra o documento (RF27 a RF29); emitir a NF-e/NFC-e, assinar o XML com o certificado digital e obter a autorização na SEFAZ é função da aplicação ou de um emissor integrado. |
 | Venda por entrega (delivery) | A adega não faz entrega e nem pretende fazer. |
 | Programa de fidelidade e cupons | A adega não tem. |
 | Integração com a maquininha de cartão | Fora do escopo do banco de dados; o sistema só registra a forma de pagamento. |
@@ -213,15 +213,15 @@ Regras completas: [`levantamento/regras_de_negocio.md`](levantamento/regras_de_n
 | RN25 | Toda escala deve identificar o funcionário, o dia de trabalho, o horário de início, o horário de término e a função exercida. |
 | RN26 | É proibido vender, fornecer ou entregar bebidas alcoólicas a crianças e adolescentes menores de 18 anos. A maioridade deve ser conferida antes da conclusão da venda. |
 | RN27 | A comercialização de produtos fumígenos deve respeitar as restrições legais, incluindo a proibição de venda a menores de 18 anos, as advertências sanitárias obrigatórias e as regras de exposição dos produtos nos pontos de venda. |
-| RN28 | As operações de venda e compra devem ter seus documentos fiscais registrados e emitidos conforme as obrigações aplicáveis ao enquadramento tributário e à legislação estadual da organização. Na venda, o documento é a NFC-e emitida pela adega (tabela `documento_fiscal`, RN31 a RN36); na compra, o banco registra o número ou a chave da nota do fornecedor. |
+| RN28 | As operações de venda e compra devem ter seus documentos fiscais registrados e emitidos conforme as obrigações aplicáveis ao enquadramento tributário e à legislação estadual da organização. O banco registra esses documentos na tabela `nota_fiscal` (RN31 a RN36): na compra, a nota do fornecedor (entrada); na venda, a NFC-e ou o cupom fiscal (saída). Os campos `compra.nr_nota_fiscal` e `venda.nr_documento_fiscal` guardam o número ou a chave informados no momento da operação. |
 | RN29 | Os dados pessoais de clientes e funcionários devem ser utilizados somente para finalidades relacionadas às atividades da organização, com acesso restrito e tratamento adequado conforme a LGPD. |
 | RN30 | As operações importantes do sistema, como acessos, inclusões, alterações, exclusões e consultas a dados pessoais, devem possuir registro de auditoria, identificando o funcionário, a data, o tipo de evento e o registro envolvido. |
-| RN31 | Toda venda concluída deve ter um documento fiscal válido (situação PENDENTE ou AUTORIZADO). O caixa só pode ser fechado quando todas as suas vendas concluídas têm documento fiscal válido. |
-| RN32 | A nota fiscal é emitida em nome da empresa cadastrada como emitente, com CNPJ, inscrição estadual, regime tributário e endereço. O documento registra também o funcionário que o emitiu e o ambiente (produção ou homologação). |
-| RN33 | O documento fiscal só pode ser criado para venda concluída e com pelo menos um item, e o valor da nota deve ser igual ao total da venda. Número, série, valor e data de emissão não podem ser alterados depois de gravados. |
-| RN34 | O número do documento é sequencial dentro da série e não se repete para o mesmo emitente e tipo de documento. A chave de acesso tem 44 dígitos e é única. Um documento AUTORIZADO exige chave de acesso, protocolo de autorização e data de autorização. |
-| RN35 | Cada venda tem no máximo um documento válido. Documento REJEITADO exige o motivo e não vale: a nota é emitida de novo com outro número. Documento CANCELADO exige a data e o motivo (mínimo de 15 caracteres). Documento rejeitado ou cancelado não volta a valer, e um documento autorizado só pode ser cancelado. A venda só pode ser cancelada depois que sua nota for cancelada. Documentos fiscais não podem ser excluídos. |
-| RN36 | Antes de a nota ser emitida, todos os produtos da venda devem ter NCM (8 dígitos), CFOP (4 dígitos) e CSOSN ou CST (3 dígitos) cadastrados. Esses valores dependem do enquadramento tributário e devem ser confirmados com o contador da adega. |
+| RN31 | Todo documento fiscal registrado em `nota_fiscal` é de entrada ou de saída (`tp_operacao`). O documento de entrada está ligado a uma compra e o de saída a uma venda; nunca aos dois ao mesmo tempo nem a nenhum. |
+| RN32 | Cada compra e cada venda tem no máximo um documento fiscal registrado (`id_compra` e `id_venda` são únicos em `nota_fiscal`). |
+| RN33 | O documento informa o modelo (NF-e, NFC-e, cupom fiscal ou outro, que é o padrão), o número (obrigatório), a série e a data de emissão (quando houver) e o valor total, que não pode ser negativo. |
+| RN34 | A chave de acesso, quando existir, tem 44 dígitos e não pode se repetir entre documentos. |
+| RN35 | A situação do documento é SEM_VALIDACAO (padrão: registro interno), AUTORIZADA, CANCELADA ou DENEGADA. O banco não consulta a SEFAZ: a situação AUTORIZADA, CANCELADA ou DENEGADA deve ser confirmada fora do banco e só então informada. |
+| RN36 | Os dados fiscais da operação já existentes (`compra.nr_nota_fiscal` e `venda.nr_documento_fiscal`) foram migrados para `nota_fiscal` com modelo OUTRO e situação SEM_VALIDACAO. Série, chave de acesso e data de emissão ficam vazias enquanto não forem conhecidas, e o documento precisa ser conferido com o contador da adega. |
 
 *Regras típicas de adega que ficaram de fora, e por quê:*
 
@@ -246,9 +246,9 @@ Regras completas: [`levantamento/regras_de_negocio.md`](levantamento/regras_de_n
 
 O DER conceitual oficial foi desenvolvido no brModelo. O modelo lógico apresenta a estrutura das entidades, atributos e relacionamentos utilizados na implementação do banco de dados.
 
-As **20 entidades de negócio** do DER revisado (as 18 da versão anterior mais `EMITENTE` e `DOCUMENTO_FISCAL`, acrescentadas para a emissão da nota fiscal):
+As **19 entidades de negócio** do DER revisado (as 18 da versão anterior mais `NOTA_FISCAL`, acrescentada para o registro dos documentos fiscais):
 
-CATEGORIA, PRODUTO, ESTOQUE, FUNCIONARIO, ESCALA, CAIXA, VENDA, ITEM_VENDA, PAGAMENTO, CLIENTE, FIADO, ITEM_FIADO, PAGAMENTO_FIADO, FORNECEDOR, COMPRA, ITEM_COMPRA, LOTE, MOVIMENTACAO_ESTOQUE, EMITENTE e DOCUMENTO_FISCAL.
+CATEGORIA, PRODUTO, ESTOQUE, FUNCIONARIO, ESCALA, CAIXA, VENDA, ITEM_VENDA, PAGAMENTO, CLIENTE, FIADO, ITEM_FIADO, PAGAMENTO_FIADO, FORNECEDOR, COMPRA, ITEM_COMPRA, LOTE, MOVIMENTACAO_ESTOQUE e NOTA_FISCAL.
 
 `LOG_ACESSO`, `GARRAFA_ABERTA` e `MOVIMENTACAO_CAIXA` foram acrescentadas na implementação lógica, com finalidade técnica e de controle, e não são entidades de negócio do DER. [CONFERIR com o grupo: se preferirem, incluir `GARRAFA_ABERTA` e `MOVIMENTACAO_CAIXA` no DER para ele refletir 22 entidades de negócio.]
 
@@ -263,7 +263,7 @@ Para cada apontamento da correção da Entrega 1, o que foi feito:
 | Faltavam relações com funcionários. | Inclusão das relações entre funcionários, vendas, compras, escalas e movimentações. | Identificar os responsáveis pelas operações. |
 | O modelo não contemplava adequadamente validade e lotes. | Inclusão da entidade LOTE e de sua relação com os itens de compra e movimentações. | Permitir controlar diferentes datas de validade de um mesmo produto. |
 | Não existia representação de caixa. | Inclusão da entidade CAIXA. | Permitir representar as operações de caixa previstas no sistema. |
-| O banco só guardava o número do documento fiscal (apontamento do professor: a informação fiscal não pode faltar). | Inclusão das entidades EMITENTE e DOCUMENTO_FISCAL e dos dados fiscais do produto (NCM, CFOP, CSOSN); `venda.nr_documento_fiscal` foi substituída pelo documento fiscal próprio. | A adega precisa emitir nota fiscal de cada venda; o número, a série, a chave de acesso, o protocolo e a situação precisam ficar registrados. |
+| O banco só guardava o número do documento fiscal (apontamento do professor: a informação fiscal não pode faltar). | Inclusão da entidade NOTA_FISCAL, ligada a COMPRA (documento de entrada) e a VENDA (documento de saída). Os campos `venda.nr_documento_fiscal` e `compra.nr_nota_fiscal` foram mantidos. | A adega precisa ter registrados o número, a série, a chave de acesso, a emissão, o valor e a situação de cada documento fiscal. |
 | Processos de negócio estavam incompletos. | Ampliação do modelo para contemplar recebimento de fiado, caixa, perdas, validade e escala. | Aumentar a cobertura dos processos da organização. |
 
 
@@ -279,10 +279,9 @@ Para cada apontamento da correção da Entrega 1, o que foi feito:
   - `ITEM_VENDA` guarda também `id_lote` (lote de onde saiu a unidade) e `id_garrafa_aberta` (garrafa de onde saiu a dose), ambos opcionais.
   - `FIADO` tem as FKs `id_venda` (UNIQUE: uma venda gera no máximo um fiado) e `id_cliente`. `PAGAMENTO` não tem `id_fiado`: a ligação é pela venda de origem. Os recebimentos posteriores ficam em `PAGAMENTO_FIADO` (FKs para `FIADO` e `CAIXA`). Não há relação direta entre `FIADO` e `ITEM_FIADO`; a ligação é por `ITEM_VENDA`.
   - `LOTE.id_item_compra` é FK sem UNIQUE: um item de compra pode gerar vários lotes.
-  - `DOCUMENTO_FISCAL` tem as FKs `id_venda`, `id_emitente` e `id_funcionario`. A FK `id_venda` não é UNIQUE: uma venda pode ter uma nota rejeitada ou cancelada e uma nova nota válida. Para garantir que só exista uma nota válida por venda, a coluna calculada `id_venda_vigente` (igual a `id_venda` enquanto a situação é PENDENTE ou AUTORIZADO, e NULL nas demais) é `UNIQUE`. `VENDA` deixou de ter `nr_documento_fiscal`; o número, a série, a chave de acesso e o protocolo ficam em `DOCUMENTO_FISCAL`.
-  - `PRODUTO` ganhou `nr_ncm`, `nr_cfop` e `cd_csosn`, usados na emissão da nota (opcionais no cadastro, mas obrigatórios para emitir: trigger `trg_documento_fiscal_valida`).
+  - `NOTA_FISCAL` tem as FKs `id_compra` (documento de entrada) e `id_venda` (documento de saída), ambas `NULL` e `UNIQUE`: cada compra ou venda tem no máximo um documento. A constraint `chk_nota_fiscal_origem` exige exatamente uma das duas preenchida, de acordo com `tp_operacao`. A chave de acesso (`cd_chave_acesso`) é `UNIQUE`.
   - `LOG_ACESSO.id_funcionario` aceita NULL (vínculo opcional).
-- **Cardinalidades:** as cardinalidades mínimas e máximas do DER foram convertidas em obrigatoriedade da FK (mínima 1 = `NOT NULL`) e em unicidade (máxima 1 no lado referenciado). A tabela da seção 1.3 lista os 33 relacionamentos com suas cardinalidades.
+- **Cardinalidades:** as cardinalidades mínimas e máximas do DER foram convertidas em obrigatoriedade da FK (mínima 1 = `NOT NULL`) e em unicidade (máxima 1 no lado referenciado). A tabela da seção 1.3 lista os 32 relacionamentos com suas cardinalidades.
 - **Generalização/especialização:** o DER não tem generalização; nenhuma estratégia de conversão foi necessária.
 
 *Decisões de conversão:*
@@ -296,7 +295,7 @@ Para cada apontamento da correção da Entrega 1, o que foi feito:
 
 As chaves primárias identificam cada registro; as chaves estrangeiras criam os relacionamentos e mantêm a integridade referencial. A lista abaixo segue o modelo lógico e o [script SQL](docs/script.sql).
 
-**Os 33 relacionamentos (chaves estrangeiras), com cardinalidade mínima e máxima de cada lado**
+**Os 32 relacionamentos (chaves estrangeiras), com cardinalidade mínima e máxima de cada lado**
 
 | Nº | Relacionamento | FK no SQL |
 | :---- | :---- | :---- |
@@ -330,9 +329,8 @@ As chaves primárias identificam cada registro; as chaves estrangeiras criam os 
 | 28 | Funcionário (0,N) — Garrafa Aberta (1,1) | garrafa_aberta.id_funcionario |
 | 29 | Caixa (0,N) — Movimentação do Caixa (1,1) | movimentacao_caixa.id_caixa |
 | 30 | Funcionário (0,N) — Movimentação do Caixa (1,1) | movimentacao_caixa.id_funcionario |
-| 31 | Venda (0,N) — Documento Fiscal (1,1) | documento_fiscal.id_venda |
-| 32 | Emitente (0,N) — Documento Fiscal (1,1) | documento_fiscal.id_emitente |
-| 33 | Funcionário (0,N) — Documento Fiscal (1,1) | documento_fiscal.id_funcionario |
+| 31 | Compra (0,1) — Nota Fiscal (0,1) | nota_fiscal.id_compra |
+| 32 | Venda (0,1) — Nota Fiscal (0,1) | nota_fiscal.id_venda |
 
 **Chaves primárias e referências principais de cada tabela**
 
@@ -358,8 +356,7 @@ As chaves primárias identificam cada registro; as chaves estrangeiras criam os 
 | movimentacao_estoque | id_movimentacao | id_produto, id_lote, id_funcionario |
 | garrafa_aberta | id_garrafa_aberta | id_lote, id_produto, id_funcionario |
 | movimentacao_caixa | id_movimentacao_caixa | id_caixa, id_funcionario |
-| emitente | id_emitente | — |
-| documento_fiscal | id_documento_fiscal | id_venda, id_emitente, id_funcionario |
+| nota_fiscal | id_nota_fiscal | id_compra (NULL), id_venda (NULL) |
 | log_acesso | id_log | id_funcionario (FK, aceita NULL) |
 
 **Pontos de atenção**
@@ -406,8 +403,8 @@ Justificativas completas: [`docs/justificativa_tecnica.md`](docs/justificativa_t
 - Produto vencido não é vendido, e a abertura de garrafa de lote vencido é recusada. O vencido que fica parado precisa ser baixado como PERDA por um funcionário; a consulta A18 lista esses lotes.
 - O fiado tem prazo (`dt_vencimento`); o controle do que venceu é por consulta (G07 e A12). Não existe trigger que bloqueie sozinho o cliente em atraso: o gerente bloqueia por UPDATE em `cliente.fl_bloqueado`, e a A12 mostra quem está em atraso e não está bloqueado.
 - A auditoria em `log_acesso` é gravada por triggers (cliente, fiado, recebimento de fiado, fechamento de caixa) e pela procedure `sp_registrar_evento_acesso` (login e consulta a dado pessoal), usando a variável `@id_funcionario_logado`, que a aplicação precisa definir. Se não definir, o evento é gravado sem funcionário.
-- Nota fiscal: `trg_documento_fiscal_valida` só deixa emitir documento para venda concluída, com itens, com valor igual ao total da venda e com NCM, CFOP e CSOSN em todos os produtos; as constraints da tabela exigem chave de 44 dígitos, protocolo e data nas notas autorizadas e motivo nas rejeitadas e canceladas; `uq_documento_fiscal_venda_vigente` impede duas notas válidas para a mesma venda; os triggers de UPDATE e DELETE impedem alterar número, série ou valor, reativar nota rejeitada ou cancelada e excluir nota; `trg_venda_cancelamento_exige_documento_cancelado` exige cancelar a nota antes da venda; `sp_fechar_caixa` recusa o fechamento se houver venda concluída sem nota válida. Mudanças de situação da nota vão para o `log_acesso`. As consultas J08, G16 a G18 e A21 a A25 conferem esses pontos.
-- A assinatura do XML com o certificado digital e a transmissão à SEFAZ não são feitas pelo banco: a aplicação (ou um emissor integrado) transmite e depois grava aqui o resultado (chave, protocolo, situação e XML). CNPJ, inscrição estadual, regime tributário, NCM, CFOP e CSOSN da massa são exemplos e precisam ser confirmados com o contador da adega.
+- Documento fiscal: a tabela `nota_fiscal` só registra o documento. A constraint `chk_nota_fiscal_origem` liga cada documento a uma compra (entrada) ou a uma venda (saída), nunca às duas, e `uq_nota_fiscal_compra`, `uq_nota_fiscal_venda` e `uq_nota_fiscal_chave_acesso` impedem documento repetido para a mesma operação e chave de acesso repetida. Não há trigger nem procedure para notas fiscais, e o fechamento do caixa não depende delas. As duas consultas do bloco "Controle de notas fiscais" (PARTE 2 do `script.sql`) listam os documentos de entrada e de saída.
+- O banco não emite NF-e/NFC-e, não assina o XML e não consulta nem autoriza documentos na SEFAZ: a aplicação (ou um emissor integrado) faz isso e depois a situação é registrada aqui (`st_documento`). Os documentos migrados da massa entram como `SEM_VALIDACAO` e precisam ser conferidos com o contador da adega.
 - Alterações de preço e de outras tabelas não têm trigger de auditoria; ficam como melhoria futura.
 - Cancelamento de venda: o banco permite `st_venda = 'CANCELADA'`, mas não devolve o estoque sozinho; a devolução é um ajuste de estoque feito pelo gerente.
 - Os triggers usam `CURRENT_DATE()` do servidor para conferir validade e vencimento; por isso a massa de dados usa `SET TIMESTAMP` (ver seção 4).
@@ -429,14 +426,14 @@ Documento completo: [`docs/indicadores_kpis.md`](docs/indicadores_kpis.md).
 | KPI06 | Fiado vencido | fiados ABERTO com `dt_vencimento` anterior a hoje | semanal | até R$ 100 vencido e nenhum cliente com mais de 30 dias de atraso |
 | KPI07 | Perdas e quebras | quantidade e valor das movimentações PERDA | mês | perdas de até 1% do faturamento do mês (uns R$ 50) |
 | KPI08 | Diferença de caixa | soma de `caixa.vl_diferenca` dos caixas FECHADO | dia, mês | soma do mês entre -R$ 20 e +R$ 20, e nenhum caixa com diferença acima de R$ 5 |
-| KPI09 | Vendas com nota fiscal autorizada | vendas concluídas com documento AUTORIZADO ÷ vendas concluídas | dia, mês | 100% das vendas com nota válida; nota PENDENTE autorizada no mesmo dia e nenhuma nota rejeitada sem reemissão |
+| KPI09 | Vendas com documento fiscal registrado | vendas concluídas com registro em `nota_fiscal` ÷ vendas concluídas | dia, mês | 100% das vendas concluídas com documento fiscal registrado (na massa: 378 de 643, cerca de 59%) |
 
 - **Potencial dos dados para BI:** as tabelas de movimento (`venda`, `item_venda`, `pagamento`, `movimentacao_estoque`, `movimentacao_caixa`, `fiado`, `compra`, `caixa`) ligadas às de cadastro (`produto`, `categoria`, `funcionario`, `cliente`, `fornecedor`) alimentam painéis de vendas, estoque, fiado, caixa e compras. Cada consulta gerencial (G) vira um gráfico ou tabela de painel, e as consultas de auditoria (A) viram um painel de qualidade dos dados.
 - **Aplicações analíticas e de IA:** nenhuma foi implementada neste trabalho; o banco não faz previsão sozinho. Possibilidades futuras, com histórico **real**: previsão de reposição de cada produto, previsão de dias e horários de pico para a escala, sugestão de limite de fiado pelo histórico de pagamento e alerta de produto parado. Treinar um modelo na massa fictícia só ensinaria as regras do gerador, não o comportamento da adega.
 
 **Rastreabilidade**
 
-Cada problema e cada KPI com as tabelas que o sustentam e a consulta do script que o responde (códigos em [`docs/consultas.sql`](docs/consultas.sql)):
+Cada problema e cada KPI com as tabelas que o sustentam e a consulta do script que o responde (códigos na PARTE 2 de [`docs/script.sql`](docs/script.sql)):
 
 | Problema ou KPI | Tabelas envolvidas | Consulta no script |
 | :---- | :---- | :---- |
@@ -453,8 +450,8 @@ Cada problema e cada KPI com as tabelas que o sustentam e a consulta do script q
 | KPI06 — Fiados vencidos | FIADO, CLIENTE | G07 |
 | KPI07 — Perdas e quebras | MOVIMENTACAO_ESTOQUE, LOTE, PRODUTO | G08 |
 | KPI08 — Diferença de caixa | CAIXA, VENDA, PAGAMENTO, MOVIMENTACAO_CAIXA | G09, G09b |
-| KPI09 — Vendas com nota fiscal autorizada | VENDA, DOCUMENTO_FISCAL | G16, G17, G18, A21 |
-| Emissão de nota fiscal eletrônica (apontamento do professor) | DOCUMENTO_FISCAL, EMITENTE, VENDA, PRODUTO | J08, G16 a G18, A21 a A25 |
+| KPI09 — Vendas com documento fiscal registrado | VENDA, NOTA_FISCAL | Controle de notas fiscais (documentos de saída) |
+| Registro de documentos fiscais (apontamento do professor) | NOTA_FISCAL, COMPRA, VENDA | Controle de notas fiscais (entrada e saída) |
 
 ---
 
@@ -462,29 +459,29 @@ Cada problema e cada KPI com as tabelas que o sustentam e a consulta do script q
 
 - **SGBD:** MySQL 8.0.16 ou superior (os `CHECK` só são aplicados a partir dessa versão).
 - **Software em que o modelo lógico foi criado:** brModelo 3.3 (gerado e salvo com o próprio programa, a partir do `docs/script.sql`).
-- **Arquivo editável do brModelo:** [`diagramas/modelo_logico.brm`](diagramas/modelo_logico.brm) (abre no brModelo 3.x; versão anterior à parte fiscal, com 21 tabelas e 30 ligações). [CONFERIR com o grupo: reabrir no brModelo e acrescentar `emitente` e `documento_fiscal`, e tirar `nr_documento_fiscal` de `venda`.]
-- **Imagem do modelo lógico:** [`diagramas/modelo_logico.png`](diagramas/modelo_logico.png) (exportada na notação do brModelo, com as 21 tabelas da versão anterior). A versão com as 23 tabelas, incluindo a parte fiscal, gerada a partir do `docs/script.sql`, está em [`diagramas/modelo_logico_v2.png`](diagramas/modelo_logico_v2.png).
+- **Arquivo editável do brModelo:** [`diagramas/modelo_logico.brm`](diagramas/modelo_logico.brm) (abre no brModelo 3.x; versão anterior à tabela `nota_fiscal`, com 21 tabelas e 30 ligações). [CONFERIR com o grupo: reabrir no brModelo e acrescentar `nota_fiscal`, com as ligações para `compra` e `venda`.]
+- **Imagem do modelo lógico:** [`diagramas/modelo_logico.png`](diagramas/modelo_logico.png) (exportada na notação do brModelo, com as 21 tabelas da versão anterior). A versão com as 22 tabelas, incluindo `nota_fiscal`, gerada a partir do `docs/script.sql`, está em [`diagramas/modelo_logico_v2.png`](diagramas/modelo_logico_v2.png).
 - **Modelo lógico em texto:** [`docs/modelo_logico.md`](docs/modelo_logico.md); 
 
 ![Modelo lógico da Adega do Tonho](diagramas/modelo_logico.png)
 
-O modelo contém 23 tabelas (21 no desenho do brModelo; as duas da parte fiscal estão no `modelo_logico_v2.png`), com colunas e tipos de dados, chaves primárias (PK), chaves estrangeiras (FK) e as cardinalidades já convertidas (tabela da seção 1.3). O que o diagrama não mostra (`NOT NULL`, `UNIQUE`, `CHECK`, `DEFAULT`) está no [dicionário de dados](docs/dicionario_dados.html) e implementado no [script SQL](docs/script.sql).
+O modelo contém 22 tabelas (21 no desenho do brModelo; a `nota_fiscal` está no `modelo_logico_v2.png`), com colunas e tipos de dados, chaves primárias (PK), chaves estrangeiras (FK) e as cardinalidades já convertidas (tabela da seção 1.3). O que o diagrama não mostra (`NOT NULL`, `UNIQUE`, `CHECK`, `DEFAULT`) está no [dicionário de dados](docs/dicionario_dados.html) e implementado no [script SQL](docs/script.sql).
 
 ---
 
 ## 3. Script SQL Completo
 
-O script é o arquivo [`docs/script.sql`](docs/script.sql) (MySQL 8.0.16 ou superior). Ele cria o banco, as 23 tabelas, as constraints, os 38 triggers e as 6 procedures. Não existe outro arquivo de criação.
+O script é o arquivo [`docs/script.sql`](docs/script.sql) (MySQL 8.0.16 ou superior). Ele reúne a estrutura do banco (PARTE 1: o `CREATE DATABASE`, as 22 tabelas, as constraints, os 33 triggers e as 6 procedures), as consultas (PARTE 2) e os exemplos e testes (PARTE 3). Não existe outro arquivo de criação.
 
 **Ordem de execução e arquivos:**
 
 | Ordem | Arquivo | O que faz |
 | :---: | :--- | :--- |
-| 1 | [`docs/script.sql`](docs/script.sql) | `CREATE DATABASE`, `CREATE TABLE`, constraints, triggers e procedures |
-| 2 | [`docs/massa_de_dados.sql`](docs/massa_de_dados.sql) | `INSERT INTO`: massa de dados fictícia (seção 4) |
-| 4 | [`docs/consultas.sql`](docs/consultas.sql) | `SELECT` com `JOIN` (J), consultas gerenciais (G) e de auditoria (A) |
-| — | [`docs/exemplos_basicos.sql`](docs/_criação.sql) | Exemplos simples de manipulação |
-O script contempla as etapas pedidas, nesta ordem lógica: (1) `CREATE DATABASE`; (2) `CREATE TABLE`; (3) constraints (PK, FK, `NOT NULL`, `UNIQUE`, `CHECK`); (4) `INSERT INTO` (massa); (5) `SELECT` com `JOIN`; (6) `UPDATE`; (7) `DELETE`; (8) consultas gerenciais; (9) consultas de auditoria. Os itens 6 e 7 estão em `testes.sql` (dentro de `START TRANSACTION … ROLLBACK`, para não alterar a massa).
+| 1 | [`docs/script.sql`](docs/script.sql) (somente a PARTE 1, até o marcador "FIM DA PARTE 1") | `CREATE DATABASE`, `CREATE TABLE`, constraints, triggers e procedures |
+| 2 | [`docs/massa_de_dados.sql`](docs/massa_de_dados.sql) | `INSERT INTO`: massa de dados fictícia (seção 4), com a migração dos números fiscais para `nota_fiscal` no final |
+| 3 | [`docs/script.sql`](docs/script.sql) (PARTE 2) | `SELECT` com `JOIN` (J), consultas gerenciais (G) e de auditoria (A) |
+| 4 | [`docs/script.sql`](docs/script.sql) (PARTE 3) | Exemplos simples de manipulação e testes (alguns devem dar erro de propósito) |
+O script contempla as etapas pedidas, nesta ordem lógica: (1) `CREATE DATABASE`; (2) `CREATE TABLE`; (3) constraints (PK, FK, `NOT NULL`, `UNIQUE`, `CHECK`); (4) `INSERT INTO` (massa); (5) `SELECT` com `JOIN`; (6) `UPDATE`; (7) `DELETE`; (8) consultas gerenciais; (9) consultas de auditoria. Os itens 6 e 7 estão na PARTE 3 do `script.sql` (exemplos e testes).
 
 **Consultas gerenciais e de auditoria:** cada uma tem um cabeçalho com o código (`G01`…, `A01`…), a pergunta em português e o que atende, como neste exemplo:
 
@@ -544,7 +541,7 @@ A segunda-feira não foi informada; a massa tem de 4 a 6 vendas. O faturamento f
 - lotes com validades diferentes, inclusive vencido;
 - movimentações de entrada, saída de venda, saída de dose, perda, ajuste e devolução ao fornecedor;
 - caixas com fechamento certo, com sobra e com falta, e suprimentos, sangrias e despesas;
-- notas fiscais autorizadas, rejeitadas e reemitidas, canceladas e uma pendente;
+- documentos fiscais de entrada (85, das compras) e de saída (383, das vendas), migrados dos campos antigos para `nota_fiscal` como SEM_VALIDACAO;
 - registros de auditoria (login, falha de login, consulta de dado pessoal, aprovação, alteração).
 
 **Quantidade de registros por tabela**
@@ -552,15 +549,14 @@ A segunda-feira não foi informada; a massa tem de 4 a 6 vendas. O faturamento f
 | Tabela | Quantidade | Justificativa pelo volume e pelas regras |
 | :---- | :---- | :---- |
 | categoria | 8 | Categorias dos produtos comercializados. |
-| produto | 60 | Produtos com NCM, CFOP e CSOSN de exemplo; alguns também vendidos em dose. |
+| produto | 60 | Produtos de 8 categorias; alguns também vendidos em dose. |
 | estoque | 60 | Um registro de estoque por produto, criado pelo trigger. |
 | funcionario | 4 | Equipe de 4 pessoas (1 gerente e 3 atendentes). |
 | escala | 208 | Turnos de 13h às 23h (meia-noite de sexta a domingo) nos 91 dias. |
 | caixa | 91 | Um caixa por dia; o último fica aberto. |
 | cliente | 12 | Clientes do fiado; 2 bloqueados. |
-| emitente | 1 | A própria adega, com dados fiscais inventados. |
 | venda | 650 | Vendas fictícias (643 concluídas e 7 canceladas) em 3 meses. |
-| documento_fiscal | 658 | Uma nota por venda: 642 autorizadas, 7 canceladas, 1 pendente e 8 rejeitadas (as vendas dessas foram emitidas de novo). |
+| nota_fiscal | 468 | Documentos fiscais migrados pela massa: 85 de entrada (compras com número de nota) e 383 de saída (vendas com número de documento), todos SEM_VALIDACAO. |
 | item_venda | 1198 | Itens das vendas: 1167 em unidade e 31 em dose. |
 | pagamento | 749 | 706 inseridos pela massa e 43 da parte FIADO, lançada pela procedure. |
 | fiado | 43 | Fiados: 8 em aberto e 35 quitados. |
@@ -597,8 +593,8 @@ As quantidades acima vêm da simulação (leitura do arquivo da massa e das regr
 | Dicionário de dados (HTML único) | [`docs/dicionario_dados.html`](docs/dicionario_dados.html) |
 | Script SQL | [`docs/script.sql`](docs/script.sql) |
 | Massa de dados | [`docs/massa_de_dados.sql`](docs/massa_de_dados.sql) |
-| Consultas (J, G e A) | [`docs/consultas.sql`](docs/consultas.sql) |
-| Exemplos SQL | [`docs/exemplos_basicos.sql`](docs/exemplos_basicos.sql) |
+| Consultas (J, G e A) | [`docs/script.sql`](docs/script.sql) (PARTE 2) |
+| Exemplos SQL | [`docs/script.sql`](docs/script.sql) (PARTE 3) |
 | Indicadores, BI e IA | [`docs/indicadores_kpis.md`](docs/indicadores_kpis.md) |
 | Levantamento | [`levantamento/levantamento.md`](levantamento/levantamento.md) |
 | Requisitos | [`levantamento/Requisitos.md`](levantamento/Requisitos.md) |
@@ -616,7 +612,7 @@ Os commits devem ser feitos pelos próprios integrantes, cada um com a própria 
 | **Kevin Gomes** | Revisão do DER, modelo lógico, chaves, normalização, justificativa técnica, README e organização da documentação. | Modelo lógico, normalização, justificativa técnica e README. |
 | **Brayan Antonio Daza Paredes** | Implementação da estrutura do banco de dados, criação das tabelas, definição das chaves primárias e estrangeiras e aplicação das restrições. | `script.sql` – criação do banco, tabelas, PKs, FKs e restrições. |
 | **Gabriel dos Santos Eufrasio** | Elaboração e inserção da massa de dados fictícios, execução de operações de atualização e exclusão e realização de testes no banco de dados. | `massa_dados.sql` – INSERT, UPDATE, DELETE e testes de integridade. |
-| **Gabriel Gonçalves Moura** | Desenvolvimento de consultas SQL para extração de informações, utilização de JOINs, consultas gerenciais e verificações para auditoria. | `consultas.sql` – SELECT, JOIN e consultas gerenciais. |
+| **Gabriel Gonçalves Moura** | Desenvolvimento de consultas SQL para extração de informações, utilização de JOINs, consultas gerenciais e verificações para auditoria. | `script.sql` (PARTE 2) – SELECT, JOIN e consultas gerenciais. |
 | **Felipe Militão** | Definição de indicadores de desempenho (KPIs), análise de informações de vendas e estoque e elaboração de propostas de utilização de Business Intelligence (BI). | Indicadores (KPIs), análise de vendas e estoque e propostas de BI. |
 ---
 
@@ -678,18 +674,18 @@ Ferramentas de IA foram usadas como **apoio** à organização, revisão e confe
 | Justificativa da escolha final | Mantida a versão do `script.sql` do grupo como referência e a documentação alinhada a ele |
 | Reflexão crítica | A conferência foi por simulação: triggers, procedures e `SET TIMESTAMP` não foram executados em MySQL real. O volume da massa é estimado, não confirmado com a adega. O grupo precisa rodar e revisar tudo |
 
-**Registro 4 — Parte fiscal: emissão de nota fiscal no banco (Claude)**
+**Registro 4 — Parte fiscal: registro de documentos fiscais no banco (Claude)**
 
 | Item | Registro |
 | :---- | :---- |
-| Ferramenta e etapa | Claude; inclusão da emissão de nota fiscal eletrônica no script, na massa, nas consultas, nos testes e na documentação |
-| Motivação | O professor apontou que a informação fiscal não pode faltar no banco, e a adega precisa dela; antes o banco só guardava o número do documento |
+| Ferramenta e etapa | Claude; adaptação da documentação à tabela `nota_fiscal` do `script.sql` e da massa corrigidos pelo professor |
+| Motivação | O professor apontou que a informação fiscal não pode faltar no banco, e a adega precisa dela; ele corrigiu o `script.sql` e a massa, e a documentação passou a seguir esses dois arquivos |
 | Prompt(s) utilizados | "coloca essa informação crucial dentro do banco de dados, da entrega 2, professor falou que essa informação não pode faltar no banco de dados, e a adega precisa ter isso" e "joga essa informação no banco de dados e onde precisar". |
-| Resposta recebida | Tabelas `emitente` e `documento_fiscal`, colunas fiscais em `produto`, triggers e regra no fechamento do caixa, massa com 650 notas, consultas J08, G16 a G18 e A21 a A25, testes T46 a T57, regras RN31 a RN36, requisitos RF27 a RF29 e processo PR13 |
-| Fontes consultadas e verificadas | O `script.sql` e a documentação do próprio grupo; a chave de acesso da massa foi gerada com o dígito verificador do cálculo oficial (módulo 11); NCM, CFOP e CSOSN são exemplos |
+| Resposta recebida | Atualização de README, levantamento, modelo lógico, normalização, dicionário, indicadores e diagramas: tabela `nota_fiscal` (entrada e saída), regras RN31 a RN36, requisitos RF27 a RF29, processo PR13 e KPI09, com os números recalculados a partir da massa |
+| Fontes consultadas e verificadas | O `script.sql` e a massa corrigidos pelo professor, que são a referência; os números (468 documentos, 378 de 643 vendas) foram contados por programa na massa |
 | Trechos rejeitados ou corrigidos | [PREENCHER após rodar no MySQL: o que o grupo ajustou] |
-| Justificativa da escolha final | Tabela própria para o documento, porque uma venda pode ter nota rejeitada ou cancelada e depois uma nota válida; a transmissão à SEFAZ ficou fora do banco, pois exige certificado digital |
-| Reflexão crítica | O script e a massa não foram executados em MySQL real. Regime tributário, NCM, CFOP, CSOSN, prazo de cancelamento e série precisam ser confirmados com o contador da adega. O desenho do brModelo (`.brm` e PNG) não foi atualizado |
+| Justificativa da escolha final | Seguir o `script.sql` do professor: tabela própria `nota_fiscal` ligada a compra ou venda, que só registra o documento; a emissão e a autorização na SEFAZ ficam fora do banco |
+| Reflexão crítica | A documentação não foi executada em MySQL real. Modelo, série, chave de acesso e situação dos documentos migrados precisam ser confirmados com o contador da adega. O desenho do brModelo (`.brm` e PNG) não foi atualizado |
 
 ---
 
