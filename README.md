@@ -757,4 +757,4 @@ Ferramentas de IA foram usadas como **apoio** à organização, revisão e confe
 
 ## 7. Apresentação Corporativa Final
 
-Link do video no YouTube:
+Link do video no YouTube: https://youtu.be/v8BmZFypTWo
