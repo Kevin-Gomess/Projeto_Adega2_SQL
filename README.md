@@ -758,3 +758,6 @@ Ferramentas de IA foram usadas como **apoio** à organização, revisão e confe
 ## 7. Apresentação Corporativa Final
 
 Link do video no YouTube: https://youtu.be/v8BmZFypTWo
+
+( Nós tentamos ao maximo tirar as partes da apresentação para o video não ficar tão grande.
+O video ficou com 8 minuto e 53 segundos de duração, não conseguimos tirar mais parte , por conta que o video ia ficar sem sentido, foi o maximo que conseguimos deixar).
